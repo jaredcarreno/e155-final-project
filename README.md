@@ -1,2 +1,2 @@
-# e155-lab4
-Repository containing source for HMC E155 Lab 4
+# e155-final-project
+Repository containing code for final project
