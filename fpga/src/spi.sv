@@ -1,9 +1,11 @@
 /////////////////////////////////////////////
 //   SPI interface.
 /////////////////////////////////////////////
-module spi(input  logic sck, 
-               input  logic sdi,
-               output logic sdo,
+// Audio samples in
+// FFT coefficients out
+module spi(input  logic sclk, 
+               input  logic copi,
+               output logic cipo,
                input  logic done,
                output logic [127:0] key, plaintext,
                input  logic [127:0] cyphertext);
