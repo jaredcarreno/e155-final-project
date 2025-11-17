@@ -1,6 +1,40 @@
-// Multiplication.
-// This performs `width`-bit multiplication on fixed point signed
-// integers, returning `width`-bit outputs, with rounding of the lsb.
+// Author(s):
+// Date:
+// Purpose:
+
+module fft_butterfly
+  #(parameter width=16)
+   (input logic [2*width-1:0] twiddle,
+    input logic [2*width-1:0]  a,
+    input logic [2*width-1:0]  b,
+    output logic [2*width-1:0] aout,
+    output logic [2*width-1:0] bout);
+
+   logic signed [width-1:0]    a_re, a_im, aout_re, aout_im, bout_re, bout_im;
+   logic signed [width-1:0]    b_re_mult, b_im_mult;
+   logic [2*width-1:0]         b_mult;
+
+   // expand to re and im components
+   assign a_re = a[2*width-1:width];
+   assign a_im = a[width-1:0];
+   
+   // perform computation
+   complex_mult #(width) twiddle_mult(b, twiddle, b_mult);
+   assign b_re_mult = b_mult[2*width-1:width];
+   assign b_im_mult = b_mult[width-1:0];
+
+   assign aout_re = a_re + b_re_mult;
+   assign aout_im = a_im + b_im_mult;
+
+   assign bout_re = a_re - b_re_mult;
+   assign bout_im = a_im - b_im_mult;
+
+   // pack re and im outputs
+   assign aout = {aout_re, aout_im};
+   assign bout = {bout_re, bout_im};
+   
+endmodule // fft_butterfly
+
 module mult
   #(parameter width=16)
    (input logic signed [width-1:0]  a,
@@ -40,7 +74,7 @@ endmodule // complex_mult
 
 // Parameterized bit reversal.
 module bit_reverse
-  #(parameter M=5)
+  #(parameter M=9)
    (input logic [M-1:0] in,
     output logic [M-1:0] out);
 
@@ -52,4 +86,3 @@ module bit_reverse
    endgenerate
 
 endmodule // bit_reverse
-

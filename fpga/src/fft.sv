@@ -1,9 +1,13 @@
+// Author(s):
+// Date:
+// Purpose:
+
 // fft top level module.
 // the width is the bit width (e.g. if width=16, 16 real and 16 im bits).
 // M is log base 2 of N (points in the FFT). e.g. M=5 for 32-point FFT.
 // the input should be width-M to account for bit growth.
 module fft
-  #(parameter width=16, M=5)
+  #(parameter width=16, M=9)
    (input logic                clk,    // clock
     input logic                reset,  // reset
     input logic                start,  // pulse once loading is complete to begin calculation.
