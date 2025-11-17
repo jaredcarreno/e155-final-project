@@ -6,7 +6,7 @@
 
 #include "STM32L432KC_SPI.h"
 #include "STM32L432KC_GPIO.h"
-#include "DS1722.h"
+// #include "DS1722.h"
 
 
 void initSPI(int br, int cpol, int cpha){
