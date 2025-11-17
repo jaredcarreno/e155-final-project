@@ -91,9 +91,14 @@ void ADC_Config(void)
 
 int main(void){
     // setting up ADC config 
+    configurePLL();
+    configureClock();
+    ADC_config();
 
-
-
-
+    for (int i = 0; i < 32; i++) {
+    printf("%u ", adc_buf[i]);
+    }
+    printf("\n");
+    delay_millis(100);
 
 }
