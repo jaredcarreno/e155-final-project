@@ -1,8 +1,9 @@
-// FFT control unit.
-// Contains the address generation unit
-// and handles loading and output logic.
+// Author(s):
+// Date:
+// Purpose:
+
 module fft_control
-  #(parameter width=16, M=5)
+  #(parameter width=16, M=9) // M = 9, given 512 = 2^9
    (input logic             clk,
     input logic             start,
     input logic             reset,
@@ -70,7 +71,7 @@ endmodule // fft_control
 // and generates ram addresses for each butterfly operation.
 // also handles ping-pong control based on fft level.
 module fft_agu
-  #(parameter width=16, M=5)
+  #(parameter width=16, M=9)
    (input logic            clk,
     input logic            enable,
     input logic            reset,
@@ -119,7 +120,7 @@ endmodule // fft_agu
 // rotations to generate the BFU input A and B addresses,
 // and the masking to generate the twiddle addresses.
 module fft_agu_adrcalc
-  #(parameter width=16, M=5)
+  #(parameter width=16, M=9)
    (input logic  [M-1:0] fftLevel,
     input logic  [M-1:0] flyInd,
     output logic [M-1:0] adrA,

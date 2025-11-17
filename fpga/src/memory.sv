@@ -1,7 +1,9 @@
-// adapted from HDL example 5.6 in 
-// Harris, Digital Design and Computer Architecture
+// Author(s):
+// Date:
+// Purpose:
+
 module twoport_RAM
-  #(parameter width=16, M=5)
+  #(parameter width=16, M=9)
    (input logic                clk,
     input logic                we,
     input logic [M-1:0]      adra,
@@ -27,7 +29,7 @@ endmodule // twoport_RAM
 
 
 module fft_twiddleROM
-  #(parameter width=16, M=5)
+  #(parameter width=16, M=9)
    (input logic  [M-2:0] twiddleadr, // 0 - 1023 = 10 bits
     output logic [2*width-1:0] twiddle);
 

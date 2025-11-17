@@ -1,12 +1,14 @@
+// Author(s):
+// Date:
+// Purpose:
+
 /////////////////////////////////////////////
 //   SPI interface.
 /////////////////////////////////////////////
 module spi(input  logic sck, 
-               input  logic sdi,
-               output logic sdo,
-               input  logic done,
-               output logic [127:0] key, plaintext,
-               input  logic [127:0] cyphertext);
+           input  logic sdi,
+           input  logic done,
+           output logic sdo);
 
     logic         sdodelayed, wasdone;
     logic [127:0] cyphertextcaptured;
