@@ -6,14 +6,14 @@ module fft_spi(input logic sck,
                input logic reset,
                input logic sdi, //COPI (MCU -> FPGA)
                output logic sdo, //CIPO (FPGA -> MCU)
-               output logic [1023:0] fft_input, //from sdi, to be fed into FFT
+               output logic [4095:0] fft_input, //from sdi, to be fed into FFT
                output logic fft_loaded, //high when fill 1024-bit frame is received
-               input  logic [1023:0] fft_output //1024-bit output from FFT, to be fed into sdo
+               input  logic [4095:0] fft_output //1024-bit output from FFT, to be fed into sdo
                ); 
 
     // Counts how many bits have been shifted during the current frame
-    // 11 bits to represent up to 1024
-    logic [10:0] counter;
+    // 12 bits to represent up to 4096
+    logic [11:0] counter;
 
     // holds the next bit to drive on sdo
     logic cipo_next;
@@ -33,13 +33,13 @@ module fft_spi(input logic sck,
         if (reset) begin
             fft_input <= 0;
         end else begin
-            if (bit_count == 0) begin
+            if (counter == 0) begin
                 // for first bit of frame, copy fft_output[1022:0] into upper bits of
                 // fft_input and bring the first sdi bit into the LSB
-                fft_input <= {fft_output[1022:0], sdi};
+                fft_input <= {fft_output[4094:0], sdi};
             end else begin
                 // for the rest of the bits, shift left and add new sdi bit at LSB
-                fft_input <= {fft_input[1022:0], sdi};
+                fft_input <= {fft_input[4094:0], sdi};
             end
         end
     end
@@ -51,23 +51,23 @@ module fft_spi(input logic sck,
             cipo_next <= 1'b0;
         end else begin
             // holding MSB so cipo_next can drive cipo on the next rising edge
-            cipo_next <= fft_input[1023];
+            cipo_next <= fft_input[4095];
         end
     end
 
     // driving the sdo
     always_comb begin
-        if (bit_count == 0) begin
+        if (counter == 0) begin
             // very first bit out is the MSB of the previous FFT result
-            sdo = fft_output[1023];
+            sdo = fft_output[4095];
         end else begin
             // all subsequent bits are from the shifted fft_input
             sdo = cipo_next;  
         end
     end
 
-    // goes high once we've seen 1024 bits, indicating fft_input holding a full 1024 bit frame
-    assign fft_loaded = (bit_count == 11'd1024);
+    // goes high once we've seen 1024 bits, indicating fft_input holding a full 4096 bit frame
+    assign fft_loaded = (counter == 12'd4096);
 
 endmodule
 
