@@ -47,7 +47,7 @@ module fft_spi(input logic sck,
     // preparing the next cipo bit on the negedge of the clock
     always_ff @(negedge sck) begin
         if (reset) begin
-            // default until first real bit is handled
+            // just sending a default bit until the first bit is ready
             cipo_next <= 1'b0;
         end else begin
             // holding MSB so cipo_next can drive cipo on the next rising edge
@@ -71,3 +71,222 @@ module fft_spi(input logic sck,
 
 endmodule
 
+
+// Every time the FFT core produces a new 32-bit output word, we pack it into a 4096-bit buffer.
+// After 128 words (128 * 32 = 4096), the buffer is "ready" to be sent back over SPI as fft_output.
+module fft_out_flop_4096(
+    input logic clk, // from FPGA
+    input logic [31:0] fft_out32, // from FFT
+    input logic fft_start, // to reset cnt at start of a new frame
+    input logic fft_done, // to indicate that the 32-bit word is valid (from FFT)
+    input logic reset, 
+
+    output logic [4095:0] fft_out4096, // to SPI
+    output logic buf_ready, // indicating buffer is full (128 words stored)
+    output logic buf_empty // indicating buffer is empty (0 words stored)
+);
+
+    logic [7:0] cnt; // how many 32-bit words have been stored
+    logic [4095:0] q; // main 4096-bit buffer
+    logic [4095:0] d; // next value for q
+    logic [4095:0] d_shift; // shifted buffer
+
+    // counter code
+    always_ff @(negedge clk) begin
+        if (reset || fft_start) begin
+            cnt <= 0; // new frame
+        end else if (fft_done) begin
+            if (cnt < 8'd128) begin
+                cnt <= cnt + 1; // count another word
+            end else begin
+                cnt <= cnt; // hold at 128
+            end
+        end else begin
+            cnt <= cnt; // no change
+        end
+    end
+
+    // dealing with data register q
+    always_ff @(negedge clk) begin
+        if (reset) begin
+            q <= 0;
+        end else begin
+            q <= d; // take the next packed value
+        end
+    end
+
+    // logic for next value
+    always_comb begin
+        
+        // default: hold current value
+        d_shift = q;
+        d = q;
+
+        // only shift if we have not yet stored 128 words
+        if (cnt < 8'd128) begin
+            // shift left by 32 bits
+            d_shift = q << 32;
+
+            // insert new FFT output into lowest 32 bits
+            d = {d_shift[4095:32], fft_out32};
+        end
+        else begin
+            // if cnt == 128: hold q unchanged
+            d = q;
+            d_shift = q;
+        end
+    end
+
+    // outputs
+    assign fft_out4096 = q;
+    assign buf_ready = (cnt == 8'd128); // buffer is full
+    assign buf_empty = (cnt == 0); // buffer is empty
+
+endmodule
+
+
+
+
+// Some points about what this module does with the new 4096 bit frames we get from the MCU: 
+// - waits in WAIT state until fft_loaded says a 4096-bit frame is ready
+// - in SEND state, shifts out 8-bit samples from fft_in4096
+// - extends each 8-bit sample to 32 bits via Extend32
+// - asserts fft_load while sending samples to the FFT core
+// - after 512 samples, asserts fft_start once and returns to WAIT
+
+module fft_in_flop_4096(
+    input logic clk,   
+    input logic reset,
+    input logic [4095:0] fft_in4096, // frame from SPI
+    input logic fft_processing, // FFT core is busy
+    input logic fft_loaded, // frame is ready from SPI (like dataReady)
+    input logic fft_done, // FFT finished (optional, for handshakes)
+    input logic out_buf_empty, // from fft_out_flop_4096 (not used here)
+    input logic out_buf_ready, // from fft_out_flop_4096 (not used here)
+
+    output logic [31:0] fft_in32, // to FFT core
+    output logic fft_load, // telling the FFT core the next sample is valid
+    output logic fft_start, // telling FFT it has sent all the samples
+    output logic [8:0] idx  // sample index currently sending into FFT core
+);
+
+    typedef enum logic {WAIT, SEND} state;
+    state currState;
+    state nextState;
+    logic [8:0] count; // counts how many 8-bit samples have been sent 
+    logic [4095:0] q;  // local copy of the 4096-bit frame that we shift
+    logic [4095:0] d; // next value for q
+    logic [4095:0] d_shift; // shifted version of q
+    logic [7:0] curr_8; // current 8-bit sample from q that will be expanded
+    logic sendReady; // condition for leaving WAIT and entering SEND state
+
+    assign curr_8 = q[4095:4088]; // next 8-bit sample is always the 8 MSBs of q
+    assign idx = count; // expose the sample index for debugging
+
+    // conditions at which to send samples
+    assign sendReady = (!fft_processing) && fft_loaded && (!fft_done);
+
+    // flip flop for the counter
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            count <= 0;
+        end else begin
+            if (currState == WAIT) begin
+                count <= 0; // keeping count the same
+            end else begin
+                // In SEND: count how many samples we have sent
+                if (count < 9'd512) begin
+                    count <= count + 1;
+                end else begin
+                    count <= count; // hold at 512 if reached
+                end
+            end
+        end
+    end
+
+
+    // flip flop for the data
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            q <= 0;
+        end else begin
+            if (currState == WAIT) begin
+                // in WAIT: latch the whole 4096-bit frame from SPI
+                q <= fft_in4096;
+            end else begin
+                // in SEND: use the shifted version
+                q <= d;
+            end
+        end
+    end
+
+    // for the next q value, shift left by 8 bits while sending
+    always_comb begin
+        // defaults: hold q as-is
+        d_shift = q;
+        d = q;
+
+        // only shift while we have not yet sent all 512 samples.
+        if (count < 9'd512) begin
+            // shift left by 8 bits, moving the next sample into MSB position
+            d_shift = q << 8;
+            d = d_shift;
+        end else begin
+            // keep q unchanged if count = 512
+            d_shift = q;
+            d = q;
+        end
+    end
+
+    // flip flop for the state
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            currState <= WAIT;
+        end else begin
+            currState <= nextState;
+        end
+    end
+
+    // next state logic
+    always_comb begin
+        // default: stay where we are
+        nextState = currState;
+
+        case (currState)
+            WAIT: begin
+                // if ready and not already "done", start sending samples.
+                if (sendReady && (count != 9'd512)) begin
+                    nextState = SEND;
+                end else begin
+                    nextState = WAIT;
+                end
+            end
+
+            SEND: begin
+                // go back to WAIT after sending the last sample
+                if (count == 9'd511) begin
+                    nextState = WAIT;
+                end else begin
+                    nextState = SEND;
+                end
+            end
+
+            default: begin
+                nextState = WAIT;
+            end
+        endcase
+    end
+
+    // asserting that all samples from this frame have been sent
+    assign fft_start = (count == 9'd512);
+
+    // valid whenever we are in SEND and the core is not currently processing.
+    assign fft_load  = (currState == SEND) && (!fft_processing);
+
+    // using Extend32 to map the 8-bit real sample into a 32-bit FFT input word
+    Extend32 extend_inst (
+        .a (curr_8),
+        .b (fft_in32)
+    );
+
+endmodule
