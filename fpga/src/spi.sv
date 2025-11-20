@@ -34,7 +34,7 @@ module fft_spi(input logic sck,
             fft_input <= 0;
         end else begin
             if (counter == 0) begin
-                // for first bit of frame, copy fft_output[1022:0] into upper bits of
+                // for first bit of frame, copy fft_output[4094:0] into upper bits of
                 // fft_input and bring the first sdi bit into the LSB
                 fft_input <= {fft_output[4094:0], sdi};
             end else begin
@@ -66,7 +66,7 @@ module fft_spi(input logic sck,
         end
     end
 
-    // goes high once we've seen 1024 bits, indicating fft_input holding a full 4096 bit frame
+    // goes high once we've seen 4096 bits, indicating fft_input holding a full 4096 bit frame
     assign fft_loaded = (counter == 12'd4096);
 
 endmodule
