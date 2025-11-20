@@ -1,6 +1,7 @@
 // Author(s):
 // Date:
 // Purpose:
+// Based off of tutorial code available at https://doi.org/10.5281/zenodo.6219524
 
 module fft_butterfly
   #(parameter width=16)

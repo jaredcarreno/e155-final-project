@@ -1,6 +1,7 @@
 // Author(s):
 // Date:
-// Purpose:
+// Purpose: 
+// Based off of tutorial code available at https://doi.org/10.5281/zenodo.6219524
 
 // fft top level module.
 // the width is the bit width (e.g. if width=16, 16 real and 16 im bits).
