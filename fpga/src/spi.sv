@@ -74,7 +74,8 @@ endmodule
 
 // Every time the FFT core produces a new 32-bit output word, we pack it into a 4096-bit buffer.
 // We only keep 16 bits per FFT output (real[31:24], imag[15:8])
-// 512 complex outputs → 512 × 16 = 8192 bits total.module fft_out_flop_8192
+// 512 complex outputs → 512 × 16 = 8192 bits total.
+module fft_out_flop_8192 (
     input logic clk, // from FPGA
     input logic [31:0] fft_out32, // from FFT
     input logic fft_start, // to reset cnt at start of a new frame
