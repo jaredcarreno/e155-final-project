@@ -260,9 +260,9 @@
   #include "stm32l4xx_hal_dma.h"
 #endif /* HAL_DMA_MODULE_ENABLED */
 
-#ifdef HAL_DFSDM_MODULE_ENABLED
-  #include "stm32l4xx_hal_dfsdm.h"
-#endif /* HAL_DFSDM_MODULE_ENABLED */
+//#ifdef HAL_DFSDM_MODULE_ENABLED
+//  #include "stm32l4xx_hal_dfsdm.h"
+//#endif /* HAL_DFSDM_MODULE_ENABLED */
 
 #ifdef HAL_CORTEX_MODULE_ENABLED
   #include "stm32l4xx_hal_cortex.h"
