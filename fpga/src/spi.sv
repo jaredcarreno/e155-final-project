@@ -8,7 +8,7 @@ module fft_spi(input logic sck,
                output logic sdo, //CIPO (FPGA -> MCU)
                output logic [4095:0] fft_input, //from sdi, to be fed into FFT
                output logic fft_loaded, //high when fill 4096-bit frame is received
-               input  logic [4095:0] fft_output //4096-bit output from FFT, to be fed into sdo
+               input  logic [8191:0] fft_output //8191-bit output from FFT, to be fed into sdo
                ); 
 
     // Counts how many bits have been shifted during the current frame
@@ -39,7 +39,7 @@ module fft_spi(input logic sck,
                 fft_input <= {fft_output[4094:0], sdi};
             end else begin
                 // for the rest of the bits, shift left and add new sdi bit at LSB
-                fft_input <= {fft_input[4094:0], sdi};
+                fft_input <= {fft_output[8190:0], sdi};
             end
         end
     end
@@ -59,7 +59,7 @@ module fft_spi(input logic sck,
     always_comb begin
         if (counter == 0) begin
             // very first bit out is the MSB of the previous FFT result
-            sdo = fft_output[4095];
+            sdo = fft_output[8191];
         end else begin
             // all subsequent bits are from the shifted fft_input
             sdo = cipo_next;  
@@ -73,23 +73,23 @@ endmodule
 
 
 // Every time the FFT core produces a new 32-bit output word, we pack it into a 4096-bit buffer.
-// We only keep 16 bits per FFT output (real[31:24], imag[15:8]), so we pack 256 * 16-bit values = 4096 bits total.
-module fft_out_flop_4096(
+// We only keep 16 bits per FFT output (real[31:24], imag[15:8])
+// 512 complex outputs → 512 × 16 = 8192 bits total.module fft_out_flop_8192
     input logic clk, // from FPGA
     input logic [31:0] fft_out32, // from FFT
     input logic fft_start, // to reset cnt at start of a new frame
     input logic fft_done, // to indicate that the 32-bit word is valid (from FFT)
     input logic reset, 
 
-    output logic [4095:0] fft_out4096, // to SPI
+    output logic [8191:0] fft_out8192, // to SPI
     output logic buf_ready, // indicating buffer is full (256 words stored)
     output logic buf_empty // indicating buffer is empty (0 words stored)
 );
 
-    logic [7:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
-    logic [4095:0] q; // main 4096-bit buffer
-    logic [4095:0] d; // next value for q
-    logic [4095:0] d_shift; // shifted buffer
+    logic [8:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
+    logic [8191:0] q; // main 4096-bit buffer
+    logic [8191:0] d; // next value for q
+    logic [8191:0] d_shift; // shifted buffer
 
     // we now only care about 8-bit real and 8-bit imag parts from fft_out32
     logic [7:0] fft_real8;     
@@ -106,10 +106,10 @@ module fft_out_flop_4096(
         if (reset || fft_start) begin
             cnt <= 0; // new frame
         end else if (fft_done) begin
-            if (cnt < 8'd256) begin
+            if (cnt < 8'd512) begin
                 cnt <= cnt + 1; // count another word
             end else begin
-                cnt <= cnt; // hold at 256
+                cnt <= cnt; // hold at 512
             end
         end else begin
             cnt <= cnt; // no change
@@ -132,24 +132,24 @@ module fft_out_flop_4096(
         d_shift = q;
         d = q;
 
-        // only shift if we have not yet stored 256 packed 16-bit values
-        if (cnt < 8'd256) begin
+        // only shift if we have not yet stored 512 words
+        if (cnt < 8'd512) begin
             // shift left by 16 bits
             d_shift = q << 16;
 
             // insert the 16-bit {real8, imag8} into the lowest 16 bits
-            d = {d_shift[4095:16], fft_packed16};
+            d = {d_shift[8191:16], fft_packed16};
         end
         else begin
-            // if cnt == 256: hold q unchanged
+            // if cnt == 512: hold q unchanged
             d = q;
             d_shift = q;
         end
     end
 
     // outputs
-    assign fft_out4096 = q;
-    assign buf_ready = (cnt == 8'd256); // buffer is full
+    assign fft_out8192 = q;
+    assign buf_ready = (cnt == 8'd512); // buffer is full
     assign buf_empty = (cnt == 0); // buffer is empty
 
 endmodule
