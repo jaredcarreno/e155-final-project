@@ -295,13 +295,13 @@ module fft_in_flop_4096(
 
 
     // using Extend32 to map the 8-bit real sample into a 32-bit FFT input word
-    Extend32 extend(.a(curr_8), .b(fft_in32));
+    Extend32 extend(.data(curr_8), .extended(fft_in32));
 
 endmodule
 
 
 module Extend32(
-    input logic [7:0] data;
+    input logic [7:0] data,
     output logic [31:0] extended);
 
     assign extended = {{8'b0}, data, {16'b0}};
