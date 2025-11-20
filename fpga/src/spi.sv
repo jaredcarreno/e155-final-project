@@ -7,8 +7,8 @@ module fft_spi(input logic sck,
                input logic sdi, //COPI (MCU -> FPGA)
                output logic sdo, //CIPO (FPGA -> MCU)
                output logic [4095:0] fft_input, //from sdi, to be fed into FFT
-               output logic fft_loaded, //high when fill 1024-bit frame is received
-               input  logic [4095:0] fft_output //1024-bit output from FFT, to be fed into sdo
+               output logic fft_loaded, //high when fill 4096-bit frame is received
+               input  logic [4095:0] fft_output //4096-bit output from FFT, to be fed into sdo
                ); 
 
     // Counts how many bits have been shifted during the current frame
@@ -73,7 +73,7 @@ endmodule
 
 
 // Every time the FFT core produces a new 32-bit output word, we pack it into a 4096-bit buffer.
-// After 128 words (128 * 32 = 4096), the buffer is "ready" to be sent back over SPI as fft_output.
+// We only keep 16 bits per FFT output (real[31:24], imag[15:8]), so we pack 256 * 16-bit values = 4096 bits total.
 module fft_out_flop_4096(
     input logic clk, // from FPGA
     input logic [31:0] fft_out32, // from FFT
@@ -82,24 +82,34 @@ module fft_out_flop_4096(
     input logic reset, 
 
     output logic [4095:0] fft_out4096, // to SPI
-    output logic buf_ready, // indicating buffer is full (128 words stored)
+    output logic buf_ready, // indicating buffer is full (256 words stored)
     output logic buf_empty // indicating buffer is empty (0 words stored)
 );
 
-    logic [7:0] cnt; // how many 32-bit words have been stored
+    logic [7:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
     logic [4095:0] q; // main 4096-bit buffer
     logic [4095:0] d; // next value for q
     logic [4095:0] d_shift; // shifted buffer
+
+    // we now only care about 8-bit real and 8-bit imag parts from fft_out32
+    logic [7:0] fft_real8;     
+    logic [7:0] fft_imag8;     
+    logic [15:0] fft_packed16; 
+
+    // slicing and packing the meaningful bits from fft_out32
+    assign fft_real8 = fft_out32[31:24];  
+    assign fft_imag8 = fft_out32[15:8];    
+    assign fft_packed16 = {fft_real8, fft_imag8};
 
     // counter code
     always_ff @(negedge clk) begin
         if (reset || fft_start) begin
             cnt <= 0; // new frame
         end else if (fft_done) begin
-            if (cnt < 8'd128) begin
+            if (cnt < 8'd256) begin
                 cnt <= cnt + 1; // count another word
             end else begin
-                cnt <= cnt; // hold at 128
+                cnt <= cnt; // hold at 256
             end
         end else begin
             cnt <= cnt; // no change
@@ -122,16 +132,16 @@ module fft_out_flop_4096(
         d_shift = q;
         d = q;
 
-        // only shift if we have not yet stored 128 words
-        if (cnt < 8'd128) begin
-            // shift left by 32 bits
-            d_shift = q << 32;
+        // only shift if we have not yet stored 256 packed 16-bit values
+        if (cnt < 8'd256) begin
+            // shift left by 16 bits
+            d_shift = q << 16;
 
-            // insert new FFT output into lowest 32 bits
-            d = {d_shift[4095:32], fft_out32};
+            // insert the 16-bit {real8, imag8} into the lowest 16 bits
+            d = {d_shift[4095:16], fft_packed16};
         end
         else begin
-            // if cnt == 128: hold q unchanged
+            // if cnt == 256: hold q unchanged
             d = q;
             d_shift = q;
         end
@@ -139,7 +149,7 @@ module fft_out_flop_4096(
 
     // outputs
     assign fft_out4096 = q;
-    assign buf_ready = (cnt == 8'd128); // buffer is full
+    assign buf_ready = (cnt == 8'd256); // buffer is full
     assign buf_empty = (cnt == 0); // buffer is empty
 
 endmodule
@@ -283,10 +293,16 @@ module fft_in_flop_4096(
     // valid whenever we are in SEND and the core is not currently processing.
     assign fft_load  = (currState == SEND) && (!fft_processing);
 
-    // using Extend32 to map the 8-bit real sample into a 32-bit FFT input word
-    Extend32 extend_inst (
-        .a (curr_8),
-        .b (fft_in32)
-    );
 
+    // using Extend32 to map the 8-bit real sample into a 32-bit FFT input word
+    Extend32 extend(.a(curr_8), .b(fft_in32));
+
+endmodule
+
+
+module Extend32(
+    input logic [7:0] data;
+    output logic [31:0] extended);
+
+    assign extended = {{8'b0}, data, {16'b0}};
 endmodule
