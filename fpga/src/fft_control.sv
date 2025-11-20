@@ -1,6 +1,7 @@
 // Author(s):
 // Date:
 // Purpose:
+// Based off of tutorial code available at https://doi.org/10.5281/zenodo.6219524
 
 module fft_control
   #(parameter width=16, M=9) // M = 9, given 512 = 2^9
@@ -8,11 +9,11 @@ module fft_control
     input logic             start,
     input logic             reset,
     input logic             load,
-    input logic [M-1:0]   rd_adr,
+    input logic [M-1:0]   rd_adr, // matches size of M
     output logic            done,
     output logic            rdsel,
     output logic            we0,
-    output logic [M-1:0]  adr0a,
+    output logic [M-1:0]  adr0a, // 
     output logic [M-1:0]  adr0b,
     output logic            we1,
     output logic [M-1:0]  adr1a,
