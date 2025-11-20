@@ -48,17 +48,16 @@ int main(void)
             copy_u16(proc_buf_A, (uint16_t*)&adc_buffer[0], 512);
             printf("DMA buff halfway");
 
-            process_block(proc_buf_A, 512);
+            // process_block(proc_buf_A, 512);
         }
-        else if (dma_flag == 2)
-        {
+        else if (dma_flag == 2){
             dma_flag = 0;
 
             // DMA finished samples 512–1023
             printf("DMA buff full");
             copy_u16(proc_buf_B, (uint16_t*)&adc_buffer[512], 512);
 
-            process_block(proc_buf_B, 512);
+            // process_block(proc_buf_B, 512);
         }
     }
 }
@@ -89,7 +88,7 @@ void ADC_Init(void)
 
     /* --- 3. Configure ADC prescaler (safe: /4) --- */ // FIX THE PRESCALER
     ADC1_COMMON->CCR &= ~(0xF << 18); 
-    ADC1_COMMON->CCR |=  (9 << 18);    // changing prescaler to 64
+    ADC1_COMMON->CCR |=  (11 << 18);    // changing prescaler to 256
 
     /* --- 4. ADC power-up sequence --- */
     ADC1->CR &= ~(1<<29);     // disable deep power-down
