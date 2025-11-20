@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RadiantProject version="4.2" radiant="2025.1.0.39.0" title="finalproject_ea_jc_sj" device="iCE40UP5K-SG48I" performance_grade="High-Performance_1.2V" family_int="ice40tp" device_int="itpa08" package_int="SG48" operation_int="IND" speed_int="6" default_implementation="impl_1">
+    <Options/>
+    <Implementation title="impl_1" dir="impl_1" description="impl_1" synthesis="lse" default_strategy="Strategy1">
+        <Options def_top="fft" top="fft"/>
+        <Source name="impl_1/fft_controller.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="impl_1/fft_testbench.sv" type="Verilog" type_short="Verilog" excluded="TRUE">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="impl_1/memory_units.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="impl_1/multiplication.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="impl_1/spi.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="impl_1/address_gen.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="impl_1/fft.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog" top_module="fft"/>
+        </Source>
+    </Implementation>
+    <Strategy name="Strategy1" file="finalproject_ea_jc_sj1.sty"/>
+</RadiantProject>
