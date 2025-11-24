@@ -78,7 +78,11 @@ module fft_in_flop_4096_tb;
         for (i = 0; i < 512; i = i + 1) begin
             // placing expected_bytes[i]
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             fft_in4096[(4095 - 8*i) -: 8] = expected_bytes[i];
+=======
+            fft_in4096[4095 - 8*i -: 8] = expected_bytes[i];
+>>>>>>> Stashed changes
 =======
             fft_in4096[4095 - 8*i -: 8] = expected_bytes[i];
 >>>>>>> Stashed changes
