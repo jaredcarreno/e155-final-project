@@ -87,7 +87,7 @@ module fft_out_flop_8192 (
     output logic buf_empty // indicating buffer is empty (0 words stored)
 );
 
-    logic [8:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
+    logic [9:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
     logic [8191:0] q; // main 4096-bit buffer
     logic [8191:0] d; // next value for q
     logic [8191:0] d_shift; // shifted buffer
@@ -107,7 +107,7 @@ module fft_out_flop_8192 (
         if (reset || fft_start) begin
             cnt <= 0; // new frame
         end else if (fft_done) begin
-            if (cnt < 8'd512) begin
+            if (cnt < 512) begin
                 cnt <= cnt + 1; // count another word
             end else begin
                 cnt <= cnt; // hold at 512
@@ -134,7 +134,7 @@ module fft_out_flop_8192 (
         d = q;
 
         // only shift if we have not yet stored 512 words
-        if (cnt < 8'd512) begin
+        if (cnt < 512) begin
             // shift left by 16 bits
             d_shift = q << 16;
 
@@ -150,7 +150,7 @@ module fft_out_flop_8192 (
 
     // outputs
     assign fft_out8192 = q;
-    assign buf_ready = (cnt == 8'd512); // buffer is full
+    assign buf_ready = (cnt == 512); // buffer is full
     assign buf_empty = (cnt == 0); // buffer is empty
 
 endmodule
