@@ -15,7 +15,19 @@ module fft_testbench();
 
    integer             f; // file pointer
 
-   fft_controller dut(clk, reset, start, load, rd_adr, rd, done, wd);
+fft_controller dut (
+    .clk(clk), 
+    .ram_clk(ram_clk),      // Was missing in original
+    .slow_clk(slow_clk),    // Was missing in original
+    .reset(reset), 
+    .start(start), 
+    .load(load), 
+    .load_address(rd_adr),  // Connects rd_adr (TB) to load_address (Module)
+    .data_in(rd),           // Connects rd (TB) to data_in (Module)
+    .done(done), 
+    .processing(),          // Output unused in TB, leave unconnected
+    .data_out(wd)           // Connects wd (TB) to data_out (Module)
+);
    
    // clk
    always

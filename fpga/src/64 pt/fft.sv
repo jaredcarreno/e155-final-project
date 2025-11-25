@@ -52,9 +52,6 @@
 // 		if (reset) done = 0;
 // 		else done = 1;
 // 	end
-
-	
-
 // endmodule
 
 //FOR USE IN TESTBENCH
