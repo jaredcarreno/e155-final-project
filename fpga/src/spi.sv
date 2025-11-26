@@ -39,7 +39,7 @@ module fft_spi(input logic sck,
                 fft_input <= {fft_output[4094:0], sdi};
             end else begin
                 // for the rest of the bits, shift left and add new sdi bit at LSB
-                fft_input <= {fft_output[8190:0], sdi};
+                fft_input <= {fft_output[4094:0], sdi};
             end
         end
     end

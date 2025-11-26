@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 
 // Author(s): Shreya Jampana
 // Date: 11/18/25
@@ -8,120 +7,141 @@
 //                - moves from WAIT to SEND
 //                - outputs 512 samples in order (via fft_in32)
 //                - asserts fft_start after 512 samples
+`timescale 1ns/1ps
 
-module fft_out_flop_tb;
-    // DUT signals
-    logic clk;
-    logic reset;
+module fft_spi_tb;
 
-    logic [31:0] fft_out32;
-    logic fft_start;
-    logic fft_done;
+  // ------------------------------------------------------------
+  // Parameters
+  // ------------------------------------------------------------
+  localparam int FRAME_BITS = 4096;
+  localparam int FFT_WIDTH  = 8192;
 
-    logic [16383:0] fft_out_packet;
-    logic buf_ready;
+  // ------------------------------------------------------------
+  // DUT I/O
+  // ------------------------------------------------------------
+  logic                 sck;
+  logic                 reset;
+  logic                 sdi;
+  logic                 sdo;
+  logic [FRAME_BITS-1:0] fft_input;
+  logic                 fft_loaded;
+  logic [FFT_WIDTH-1:0] fft_output;
 
-    // instantiate DUT
-    fft_out_flop dut (
-        .clk(clk),
-        .reset(reset),
-        .fft_out32(fft_out32),
-        .fft_start(fft_start),
-        .fft_done(fft_done),
-        .fft_out_packet(fft_out_packet),
-        .buf_ready(buf_ready)
-    );
+  // ------------------------------------------------------------
+  // DUT Instance
+  // ------------------------------------------------------------
+  fft_spi dut (
+    .sck(sck),
+    .reset(reset),
+    .sdi(sdi),
+    .sdo(sdo),
+    .fft_input(fft_input),
+    .fft_loaded(fft_loaded),
+    .fft_output(fft_output)
+  );
 
-    // clock
-    initial clk = 1'b0;
-    always #5 clk = ~clk;
+  // ------------------------------------------------------------
+  // Clock Generation
+  // ------------------------------------------------------------
+  initial begin
+    sck = 0;
+    forever #5 sck = ~sck;
+  end
 
-    // reset task
-    task automatic apply_reset;
+  // ------------------------------------------------------------
+  // Pre-declare all variables used in initial blocks and tasks
+  // ------------------------------------------------------------
+  int i;
+  logic [FRAME_BITS-1:0] frame_in_0;
+  logic [FRAME_BITS-1:0] frame_out_0;
+  logic [FRAME_BITS-1:0] frame_in_1;
+  logic [FRAME_BITS-1:0] frame_out_1;
+
+  // ------------------------------------------------------------
+  // Task: Send a 4096-bit frame
+  // ------------------------------------------------------------
+  task send_frame(
+    input  logic [FRAME_BITS-1:0] mosi,
+    output logic [FRAME_BITS-1:0] miso,
+    input  string label
+  );
     begin
-        reset = 1'b1;
-        fft_out32 = 32'h0;
-        fft_start = 1'b0;
-        fft_done  = 1'b0;
-        @(posedge clk); 
-        @(posedge clk);
-        reset = 1'b0;
-        @(posedge clk);
+      $display("[%0t] === Start Sending %s ===", $time, label);
+
+      for (i = 0; i < FRAME_BITS; i++) begin
+
+        // Drive SDI BEFORE posedge (LSB-first)
+        sdi = mosi[i];
+
+        @(posedge sck);
+        miso[i] = sdo;
+
+        $display("[%0t] %s POS bit=%0d SDI=%0b SDO=%0b loaded=%0b counter=%0d",
+                 $time, label, i, sdi, sdo, fft_loaded, dut.counter);
+
+        @(negedge sck);
+
+        $display("[%0t] %s NEG bit=%0d SDI=%0b SDO=%0b loaded=%0b counter=%0d",
+                 $time, label, i, sdi, sdo, fft_loaded, dut.counter);
+
+      end
+
+      $display("[%0t] === End Sending %s ===", $time, label);
     end
-    endtask
+  endtask
 
-    // expected 32-bit words
-    logic [31:0] expected_words [0:511];
+  // ------------------------------------------------------------
+  // Main Stimulus
+  // ------------------------------------------------------------
+  initial begin
+    reset = 1;
+    sdi   = 0;
 
+    // Initialize FFT output
+    fft_output = '0;
+    fft_output[63:32] = 32'hDEADBEEF;
+    fft_output[31:16] = 16'h5A5A;
+    fft_output[15:0]  = 16'hA5A5;
 
-    initial begin
-        int i;
+    $display("[%0t] TB: Reset asserted", $time);
 
-        // init signals
-        reset = 0;
-        fft_start = 0;
-        fft_done  = 0;
-        fft_out32 = 32'h0;
+    repeat (3) @(negedge sck);
+    reset = 0;
+    $display("[%0t] TB: Reset deasserted", $time);
 
-        $display("[TB] Applying reset...");
-        apply_reset();
-        $display("[TB] Reset deasserted.");
+    repeat (2) @(negedge sck);
 
-        // generate test pattern (word = index)
-        for (i = 0; i < 512; i++)
-            expected_words[i] = i;
-
-        // start new packet
-        @(posedge clk);
-        fft_start = 1;
-        @(posedge clk);
-        fft_start = 0;
-
-        $display("[TB] Sending 512 samples to DUT...");
-
-        // feed 512 words
-        for (i = 0; i < 512; i++) begin
-            
-            fft_out32 = expected_words[i];
-            fft_done  = 1;
-            @(negedge clk);        // DUT samples on NEG edge
-
-            fft_done = 0;
-            $display("[TB][%0t] Sent word %0d = 0x%08h", 
-                      $time, i, fft_out32);
-
-            @(posedge clk);        // complete cycle
-        end
-
-        // wait 2 cycles for buf_ready
-        @(posedge clk);
-        @(posedge clk);
-
-        if (!buf_ready) begin
-            $display("[TB][ERROR] buf_ready NOT asserted after 512 samples!");
-            $fatal(1);
-        end else begin
-            $display("[TB] buf_ready asserted correctly.");
-        end
-
-        // verify packet content (MSB-first shifting)
-        $display("[TB] Checking output packet contents...");
-        for (i = 0; i < 512; i++) begin
-            logic [31:0] extracted;
-            extracted = fft_out_packet[(16383 - 32*i) -: 32];
-
-            if (extracted !== expected_words[i]) begin
-                $display("[TB][ERROR] Packet mismatch at index %0d:", i);
-                $display("       Got      = 0x%08h", extracted);
-                $display("       Expected = 0x%08h", expected_words[i]);
-                $fatal(1);
-            end
-        end
-
-        $display("[TB] Packet verified successfully.");
-        $display("[TB] TEST PASSED.");
-        $stop;
+    // ----------------------------------------------------------
+    // Frame 0: Alternating bits
+    // ----------------------------------------------------------
+    for (i = 0; i < FRAME_BITS; i++) begin
+      frame_in_0[i] = (i & 1);
     end
+
+    send_frame(frame_in_0, frame_out_0, "FRAME0");
+
+    if (fft_loaded)
+      $display("[%0t] TB: fft_loaded is HIGH after frame0", $time);
+    else
+      $display("[%0t] TB WARNING: fft_loaded NOT high!", $time);
+
+    // ----------------------------------------------------------
+    // Frame 1: Random data
+    // ----------------------------------------------------------
+    for (i = 0; i < FRAME_BITS; i++) begin
+      frame_in_1[i] = $urandom_range(0,1);
+    end
+
+    send_frame(frame_in_1, frame_out_1, "FRAME1");
+
+    $display("[%0t] TB: Done with frame1. fft_loaded=%0b", $time, fft_loaded);
+
+    #40;
+    $display("[%0t] TB: Simulation finished", $time);
+    $finish;
+  end
 
 endmodule
+
 

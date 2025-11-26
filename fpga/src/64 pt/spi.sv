@@ -18,9 +18,6 @@ module fft_spi(input  logic sck, //from mcu
     always_ff @(posedge sck) begin
 		  fft_in <= (cnt == 0) ? {fft_out[1022:0], sdi} : {fft_in[1022:0], sdi};
 	 end
-	 
-
-
     // sdo should change on the negative edge of sck
     always_ff @(negedge sck)
 			qdelayed = fft_in[1023];
