@@ -65,7 +65,7 @@ module fft_testbench();
         // Ensure files are in the simulation directory!
         // Note: Filenames match what your Python script generated
         $readmemh("test_in.memh", input_data_8bit);
-        $readmemh("test_out.memh", expected_out);
+        $readmemh("ideal_test_out.memh", expected_out);
         
         f = $fopen("simulation_results.txt", "w");
 

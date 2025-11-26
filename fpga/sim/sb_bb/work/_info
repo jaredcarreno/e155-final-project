@@ -1,0 +1,509 @@
+m255
+K4
+z2
+Z0 !s12c _opt
+Z1 !s99 nomlopt
+R0
+R1
+R0
+R1
+!s11f vlog 2024.2 2024.05, May 20 2024
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z2 dC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/finalproject_modelsim
+T_opt
+!s110 1764114675
+V>h9V>KjSlH27`8P3XZ[eU2
+04 10 4 work tb_fft_top fast 0
+=4-78465c7f6ef7-692640f2-2a8-3a88
+R1
+!s12f OEM25U17 
+!s12b OEM100
+!s124 OEM100
+!s135 nogc
+o-quiet -auto_acc_if_foreign -work work -L iCE40UP -Lf iCE40UP +acc -L iCE40UP -Lf iCE40UP
+Z3 tCvgOpt 0
+n@_opt
+OL;O;2024.2;79
+R2
+vcomplex_mult
+Z4 2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math.sv
+Z5 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
+Z6 !s110 1764114777
+!i10b 1
+!s100 5ckahL4@`[>Kl<Jdd`[Q50
+II7Zb>V8IgDPM<c8D@INh92
+S1
+Z7 dC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/sb_bb
+Z8 w1764054347
+Z9 8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math.sv
+Z10 FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math.sv
+!i122 107
+L0 30 32
+Z11 VDg1SIo80bB@j0V0VzS_@n1
+Z12 OL;L;2024.2;79
+r1
+!s85 0
+31
+Z13 !s108 1764114777.000000
+Z14 !s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math.sv|
+Z15 !s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math.sv|
+!i113 0
+Z16 o-work work -sv -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R3
+vfft_agu
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu.sv
+R5
+Z17 !s110 1764114776
+!i10b 1
+!s100 XV[OiK<JezKcUfB7IkMO<1
+I;lh@>FN@MagK5WzIBDoFM0
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu.sv
+!i122 100
+L0 7 44
+R11
+R12
+r1
+!s85 0
+31
+!s108 1764114775.000000
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu.sv|
+!i113 0
+R16
+R3
+vfft_agu_adrcalc
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu_adrcalc.sv
+R5
+R17
+!i10b 1
+!s100 eiPM2mAONGe13QCHO;aHe3
+ImSY;PGfgI6G9SYPIVELIU1
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu_adrcalc.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu_adrcalc.sv
+!i122 101
+L0 1 28
+R11
+R12
+r1
+!s85 0
+31
+Z18 !s108 1764114776.000000
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu_adrcalc.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_agu_adrcalc.sv|
+!i113 0
+R16
+R3
+vfft_butterfly
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_butterfly.sv
+R5
+R17
+!i10b 1
+!s100 5aC[jY4cg_B7TcB9mV05o1
+IlecQUj4CR5TAnTcM1cAb33
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_butterfly.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_butterfly.sv
+!i122 102
+L0 9 44
+R11
+R12
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_butterfly.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_butterfly.sv|
+!i113 0
+R16
+R3
+vfft_butterfly_tb
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_butterfly.sv
+R5
+Z19 !s110 1764114778
+!i10b 1
+!s100 0kf96OjVnSYlIk@NE5X[_1
+IkK3Qm;>1V]zDbLEe?6]Vc3
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_butterfly.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_butterfly.sv
+!i122 112
+L0 3 62
+R11
+R12
+r1
+!s85 0
+31
+Z20 !s108 1764114778.000000
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_butterfly.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_butterfly.sv|
+!i113 0
+R16
+R3
+vfft_control_unit
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_control_unit.sv
+R5
+R17
+!i10b 1
+!s100 FaKHjL7@S;afDgTN2BbR22
+IbFIR9^fIM41m]:edA;^JO1
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_control_unit.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_control_unit.sv
+!i122 103
+L0 7 65
+R11
+R12
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_control_unit.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_control_unit.sv|
+!i113 0
+R16
+R3
+vfft_master
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_master.sv
+R5
+R17
+!i10b 1
+!s100 _R25N1ooOAig;QlKF=fjE1
+Ib;dcb<>B1M><bK:Qi4`nW3
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_master.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_master.sv
+!i122 104
+L0 7 69
+R11
+R12
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_master.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_master.sv|
+!i113 0
+R16
+R3
+vfft_top
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_top.sv
+R5
+R17
+!i10b 1
+!s100 D0@<3D5fkdDX55:@[3akC2
+I`4V[Hml4VbWOKXB9:5ihJ1
+S1
+R7
+w1764114478
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_top.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_top.sv
+!i122 105
+L0 7 100
+R11
+R12
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_top.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/fft_top.sv|
+!i113 0
+R16
+R3
+vmath_tb
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math_tb.sv
+R5
+R6
+!i10b 1
+!s100 f7IC?6bZ4igAkE8[fP`aj2
+Ic@Z[hzWcfY]EF4[:Mn52>2
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math_tb.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math_tb.sv
+!i122 108
+L0 3 106
+R11
+R12
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math_tb.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/math_tb.sv|
+!i113 0
+R16
+R3
+vmult
+R4
+R5
+R6
+!i10b 1
+!s100 iZeV;>=9?3cNX]?b3?gz@0
+IbaKbPh21gR93<aVNHkIFb0
+S1
+R7
+R8
+R9
+R10
+!i122 107
+L0 10 16
+R11
+R12
+r1
+!s85 0
+31
+R13
+R14
+R15
+!i113 0
+R16
+R3
+vRAM
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/RAM.sv
+R5
+R19
+!i10b 1
+!s100 X_OaiUnbXPe:?=CY`c4?30
+I@KFMHDWGF3Nzaod[?Wgob1
+S1
+R7
+w1764114585
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/RAM.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/RAM.sv
+!i122 115
+L0 5 38
+R11
+R12
+r1
+!s85 0
+31
+R20
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/RAM.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/RAM.sv|
+!i113 0
+R16
+R3
+n@r@a@m
+vreindex_bits
+R4
+R5
+R6
+!i10b 1
+!s100 POBkMSCK7Z;G?2b_EgEFb1
+IR]kSkn@P7lZ?zPLjZAeKh3
+S1
+R7
+R8
+R9
+R10
+!i122 107
+L0 64 12
+R11
+R12
+r1
+!s85 0
+31
+R13
+R14
+R15
+!i113 0
+R16
+R3
+vreindex_bits_tb
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/reindex_bits_tb.sv
+R5
+R6
+!i10b 1
+!s100 _eJjEmT2S[6j;BZ]aY0RV3
+IfX;mm1SFnWnBlJIZiO_ZB3
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/reindex_bits_tb.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/reindex_bits_tb.sv
+!i122 109
+L0 3 58
+R11
+R12
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/reindex_bits_tb.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/reindex_bits_tb.sv|
+!i113 0
+R16
+R3
+vtb_fft_agu
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu.sv
+R5
+R6
+!i10b 1
+!s100 U<dXm9E:dQE0Ma1SceUXD0
+I7X2zXZKcjiTSBSIG=XjGc2
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu.sv
+!i122 110
+L0 3 87
+R11
+R12
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu.sv|
+!i113 0
+R16
+R3
+vtb_fft_agu_adrcalc
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu_adrcalc.sv
+R5
+R6
+!i10b 1
+!s100 ;MWT=<`WOg4d[cP6m^eik0
+I:iaZfnVF3^jmZJFmKQg?`0
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu_adrcalc.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu_adrcalc.sv
+!i122 111
+L0 3 49
+R11
+R12
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu_adrcalc.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_agu_adrcalc.sv|
+!i113 0
+R16
+R3
+vtb_fft_control_unit
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_control_unit.sv
+R5
+R19
+!i10b 1
+!s100 aPMU1e]^@4RCQ;ai[XDh01
+I?V>DMSZckhSzbo8j:GSb40
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_control_unit.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_control_unit.sv
+!i122 113
+L0 3 102
+R11
+R12
+r1
+!s85 0
+31
+R20
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_control_unit.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/tb_fft_control_unit.sv|
+!i113 0
+R16
+R3
+vtb_fft_top
+2C:\Users\Minec\Desktop\HMC\E155\e155-final-project\fpga\src\512 pt shhh\fft_top_tb.sv
+R5
+R6
+!i10b 1
+!s100 D>=N1ePb>DaDnWZa_YX=23
+ImH9=HUEWDUDl?gIQ2>n>_1
+S1
+R7
+w1764113897
+8C:\Users\Minec\Desktop\HMC\E155\e155-final-project\fpga\src\512 pt shhh\fft_top_tb.sv
+FC:\Users\Minec\Desktop\HMC\E155\e155-final-project\fpga\src\512 pt shhh\fft_top_tb.sv
+!i122 106
+L0 3 86
+R11
+R12
+r1
+!s85 0
+31
+R18
+!s107 C:\\Users\\Minec\\Desktop\\HMC\\E155\\e155-final-project\\fpga\\src\\512 pt shhh\\fft_top_tb.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:\Users\Minec\Desktop\HMC\E155\e155-final-project\fpga\src\512 pt shhh\fft_top_tb.sv|
+!i113 0
+R16
+R3
+vtwiddle_ROM
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_ROM.sv
+R5
+R19
+!i10b 1
+!s100 _f1Yz3EJY3f^PW@1gbR[83
+I[Nn1nodY@ai4HZN8li4YV2
+S1
+R7
+w1764114492
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_ROM.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_ROM.sv
+!i122 116
+L0 6 282
+R11
+R12
+r1
+!s85 0
+31
+R20
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_ROM.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_ROM.sv|
+!i113 0
+R16
+R3
+ntwiddle_@r@o@m
+vtwiddle_vectors
+2C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_vectors.sv
+R5
+R19
+!i10b 1
+!s100 Fbz^mIkZPICA>T^;nFCzD3
+IAN:7ZFfRH[a_kg=5n4oYO3
+S1
+R7
+R8
+8C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_vectors.sv
+FC:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_vectors.sv
+!i122 114
+L0 7 270
+R11
+R12
+r1
+!s85 0
+31
+R20
+!s107 C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_vectors.sv|
+!s90 -reportprogress|300|-work|work|-vopt|-sv|-stats=none|C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt shhh/twiddle_vectors.sv|
+!i113 0
+R16
+R3

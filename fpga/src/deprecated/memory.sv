@@ -1,67 +1,67 @@
-// Author(s):
-// Date:
-// Purpose: Memory Units
-
-// Emulates a True Dual-Port RAM using Single-Port Block RAM (EBR)
-// by running at 2x speed (Time Multiplexing).
-module twoport_RAM #(parameter width=16, M=9) (
-    input logic                clk_fast, // Fast Clock (48 MHz)
-    input logic                clk_slow, // Logic Clock (24 MHz)
-    input logic                we,       
-    
-    // Port A
-    input logic [M-1:0]      adra,
-    input logic [2*width-1:0]  wda,
-    output logic [2*width-1:0] rda,
-    
-    // Port B
-    input logic [M-1:0]      adrb,
-    input logic [2*width-1:0]  wdb,
-    output logic [2*width-1:0] rdb
+// memory.sv - Inferred BRAMs
+module ram (
+    input  logic          clk, 
+    input  logic          write,
+    input  logic [8:0]    write_address, 
+    input  logic [8:0]    read_address,
+    input  logic [31:0]   d,
+    output logic [31:0]   q
 );
-    // Shared Memory Array
-    reg [2*width-1:0] mem [0:2**M-1];
-    logic phase;
-
-    // --- CRITICAL FIX: Initialize Memory to 0 ---
-    // This prevents 'x' from propagating if the FFT reads before writing
-    integer i;
-    initial begin
-        for (i=0; i < 2**M; i=i+1) begin
-            mem[i] = 0;
-        end
-    end
-
-    // Phase synchronization
-    always_ff @(posedge clk_fast) begin
-        if (clk_slow) phase <= 0; 
-        else          phase <= 1;
-    end
-
-    // Double-Pumped Access
-    always_ff @(posedge clk_fast) begin
-        if (phase == 0) begin
-            // Phase 0: Port A
-            if (we) mem[adra] <= wda;
-            rda <= mem[adra];
-        end else begin
-            // Phase 1: Port B
-            if (we) mem[adrb] <= wdb;
-            rdb <= mem[adrb];
-        end
+    logic [31:0] mem [511:0];
+    always_ff @(posedge clk) begin
+        if (write) mem[write_address] <= d;
+        q <= mem[read_address];
     end
 endmodule
 
-module fft_twiddleROM
-  #(parameter width=16, M=9)
-   (input logic  [M-2:0] twiddleadr, 
-    output logic [2*width-1:0] twiddle);
-
-   logic [2*width-1:0] vectors [0:2**(M-1)-1];
-   
-   // Ensure 'twiddle.vectors' is in your project root or simulation folder
-   initial $readmemb("twiddle.vectors", vectors);
-   
-   assign twiddle = vectors[twiddleadr];
-
+module twiddle_rom (
+    input  logic          clk,
+    input  logic [7:0]    twiddle_address,
+    output logic [31:0]   twiddle
+);
+    logic [31:0] mem [0:255];
+    initial $readmemb("twiddle.vectors", mem); // Ensure file has 256 lines!
+    always_ff @(posedge clk) begin
+        twiddle <= mem[twiddle_address];
+    end
 endmodule
+
+// // memory.sv - Scaled for 512-point FFT
+// // Fixes "Multiple Driver" errors and scales depth to 512
+
+// module ram (
+//     input  logic          clk, 
+//     input  logic          write,
+//     input  logic [8:0]    write_address, // 9 bits for 512 lines
+//     input  logic [8:0]    read_address,
+//     input  logic [31:0]   d,
+//     output logic [31:0]   q
+// );
+
+//     logic [31:0] mem [511:0]; // Depth 512
+
+//     // Unified process to prevent driver conflicts
+//     always_ff @(posedge clk) begin
+//         if (write) 
+//             mem[write_address] <= d;
+//         q <= mem[read_address];
+//     end
+
+// endmodule
+
+// module twiddle_rom (
+//     input  logic          clk,
+//     input  logic [7:0]    twiddle_address, // 8 bits for 256 twiddles (N/2)
+//     output logic [31:0]   twiddle
+// );
+
+//     logic [31:0] mem [0:255]; // Depth 256
+    
+//     // Ensure "twiddle.vectors" has 256 lines!
+//     initial $readmemb("twiddle.vectors", mem);
+    
+//     always_ff @(posedge clk) begin
+//         twiddle <= mem[twiddle_address];
+//     end
+
+// endmodule

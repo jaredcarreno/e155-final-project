@@ -1,0 +1,53 @@
+{C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/fft.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/fft.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module fft
+
+Top level modules:
+	fft
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/fft_control.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/fft_control.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module fft_controller
+-- Compiling module fft_counter
+-- Compiling module agu
+-- Compiling module processing_agu
+-- Compiling module reverse_bits
+
+Top level modules:
+	fft_controller
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/memory.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/memory.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module ram
+-- Compiling module twiddle_rom
+
+Top level modules:
+	ram
+	twiddle_rom
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/multiplication.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/multiplication.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module fft_butterfly
+-- Compiling module mult
+-- Compiling module complex_mult
+-- Compiling module bit_reverse
+
+Top level modules:
+	fft_butterfly
+	bit_reverse
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/fft_testbench.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/fft_testbench.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module fft_testbench
+
+Top level modules:
+	fft_testbench
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/top.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 fft/top.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module top
+
+Top level modules:
+	top
+
+} {} {}}

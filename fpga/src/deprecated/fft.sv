@@ -1,63 +1,65 @@
-// Author(s): Jared Carreno, Shreya Jampana, Emma Angel
-// Date:
-// Purpose: FFT Core Module
-// Very heavily based off of tutorial code available at https://doi.org/10.5281/zenodo.6219524
+// fft.sv - Wrapper
+module fft #(parameter width=16, M=9) (
+    input logic                clk_fast, 
+    input logic                clk_slow, 
+    input logic                reset,  
+    input logic                start,    
+    input logic                load,     
+    input logic [M - 1:0]      rd_adr,   
+    input logic [2*width-1:0]  rd,       
+    output logic [2*width-1:0] wd,       
+    output logic               done      
+);
+    logic processing; // Unused output
 
-module fft
-  #(parameter width=16, M=9)
-   (input logic                clk_fast, // Fast Clock (Memory Muxing)
-    input logic                clk_slow, // Slow Clock (Logic)
-    input logic                reset,    // reset
-    input logic                start,    // pulse to begin calculation
-    input logic                load,     // high when loading data
-    input logic [M - 1:0]      rd_adr,   // index of input sample
-    input logic [2*width-1:0]  rd,       // read data in
-    output logic [2*width-1:0] wd,       // complex write data out
-    output logic               done);    // high when complete
+    fft_controller controller (
+        .clk(clk_fast),         
+        .ram_clk(clk_fast),     
+        .slow_clk(clk_slow),    
+        .reset(reset),
+        .start(start),
+        .load(load),
+        .load_address(rd_adr),  
+        .data_in(rd),           
+        .done(done),
+        .processing(processing),
+        .data_out(wd)           
+    );
+endmodule
 
-   logic                       rdsel;
-   logic                       we0, we1;
-   logic [M - 1:0]             adr0a, adr0b, adr1a, adr1b;
-   logic [M - 2:0]             twiddleadr;
-   logic [2*width-1:0]         twiddle, a, b, writea, writeb, aout, bout;
-   logic [2*width-1:0]         rd0a, rd0b, rd1a, rd1b, val_in;
-   
-   // load logic 
-   assign val_in = rd;
-   
-   // complex input data real in top 16 bits, imaginary in bottom 16 bits
-   assign writea = load ? val_in : aout; // write ram0 with input data or BFU output
-   assign writeb = load ? val_in : bout;
+// // Author(s): Jared Carreno, Shreya Jampana, Emma Angel
+// // Purpose: FFT Core Wrapper
+// // This module wraps the 'fft_controller' to match the interface expected by the testbench.
 
-   // output logic
-   assign wd = M[0] ? rd1a : rd0a; // ram holding results depends on #fftLevels
+// module fft #(parameter width=16, M=9) (
+//     input logic                clk_fast, // Fast Clock (Memory Muxing)
+//     input logic                clk_slow, // Slow Clock (Logic)
+//     input logic                reset,  
+//     input logic                start,    // pulse to begin calculation
+//     input logic                load,     // high when loading data
+//     input logic [M - 1:0]      rd_adr,   // index of input sample
+//     input logic [2*width-1:0]  rd,       // read data in
+//     output logic [2*width-1:0] wd,       // complex write data out
+//     output logic               done      // high when complete
+// );
 
-   // ping-pong read (BFU input) logic
-   assign a = rdsel ? rd1a : rd0a;
-   assign b = rdsel ? rd1b : rd0b;
+//     // Unused output from controller
+//     logic processing;
 
-   // --- Submodules ---
+//     // Instantiate the Controller
+//     // This module contains the RAMs, AGU, and Butterfly units internally.
+//     fft_controller controller (
+//         .clk(clk_fast),         // System Clock
+//         .ram_clk(clk_fast),     // Used for Muxing (Same as Fast Clock)
+//         .slow_clk(clk_slow),    // Logic Clock
+//         .reset(reset),
+//         .start(start),
+//         .load(load),
+//         .load_address(rd_adr),  // Connect Testbench Address
+//         .data_in(rd),           // Connect Testbench Input
+//         .done(done),
+//         .processing(processing),
+//         .data_out(wd)           // Connect Testbench Output
+//     );
 
-   // Control Unit (Runs on Slow Logic Clock)
-   fft_control control(clk_slow, start, reset, load, rd_adr, done, rdsel, 
-                                      we0, adr0a, adr0b, we1, adr1a, adr1b, twiddleadr);
-
-   // RAM 0 (Ping) - Shared Dual Port Wrapper
-   twoport_RAM ram0(
-       .clk_fast(clk_fast), .clk_slow(clk_slow), .we(we0), 
-       .adra(adr0a), .wda(writea), .rda(rd0a),
-       .adrb(adr0b), .wdb(writeb), .rdb(rd0b)
-   );
-
-   // RAM 1 (Pong) - Shared Dual Port Wrapper
-   twoport_RAM ram1(
-       .clk_fast(clk_fast), .clk_slow(clk_slow), .we(we1), 
-       .adra(adr1a), .wda(aout),   .rda(rd1a),
-       .adrb(adr1b), .wdb(bout),   .rdb(rd1b)
-   );
-
-   // Math Units
-   fft_butterfly bgu(twiddle, a, b, aout, bout);
-   fft_twiddleROM twiddlerom(twiddleadr, twiddle);
-
-endmodule // fft
+// endmodule
