@@ -8,7 +8,7 @@ module fft_spi(input logic sck,
                output logic sdo, //CIPO (FPGA -> MCU)
                output logic [4095:0] fft_input, //from sdi, to be fed into FFT
                output logic fft_loaded, //high when fill 4096-bit frame is received
-               input  logic [8191:0] fft_output //8191-bit output from FFT, to be fed into sdo
+               input  logic [4095:0] fft_output //8191-bit output from FFT, to be fed into sdo
                ); 
 
     // Counts how many bits have been shifted during the current frame
@@ -39,27 +39,28 @@ module fft_spi(input logic sck,
                 fft_input <= {fft_output[4094:0], sdi};
             end else begin
                 // for the rest of the bits, shift left and add new sdi bit at LSB
-                fft_input <= {fft_output[8190:0], sdi};
+                fft_input <= {fft_input[4094:0], sdi};
             end
         end
     end
 
     // preparing the next cipo bit on the negedge of the clock
     always_ff @(negedge sck) begin
-        if (reset) begin
-            // just sending a default bit until the first bit is ready
-            cipo_next <= 1'b0;
-        end else begin
-            // holding MSB so cipo_next can drive cipo on the next rising edge
-            cipo_next <= fft_input[4095];
-        end
+        cipo_next <= fft_input[4095];
+        //if (reset) begin
+            //// just sending a default bit until the first bit is ready
+            //cipo_next <= 1'b0;
+        //end else begin
+            //// holding MSB so cipo_next can drive cipo on the next rising edge
+            //cipo_next <= fft_input[4095];
+        //end
     end
 
     // driving the sdo
     always_comb begin
         if (counter == 0) begin
             // very first bit out is the MSB of the previous FFT result
-            sdo = fft_output[8191];
+            sdo = fft_output[4095];
         end else begin
             // all subsequent bits are from the shifted fft_input
             sdo = cipo_next;  
