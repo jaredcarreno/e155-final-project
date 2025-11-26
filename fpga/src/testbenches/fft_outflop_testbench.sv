@@ -5,9 +5,8 @@
 // Clean, minimal, race-free testbench for fft_out_flop_8192
 
 `timescale 1ns/1ps
-
-module fft_out_flop_8192_tb;
-
+// for shreyas new code
+module fft_out_flop_4096_tb;
     logic clk;
     logic reset;
 
@@ -15,18 +14,18 @@ module fft_out_flop_8192_tb;
     logic fft_start;
     logic fft_done;
 
-    logic [8191:0] fft_out8192;
+    logic [4095:0] fft_out4095;
     logic buf_ready;
     logic buf_empty;
 
     // DUT
-    fft_out_flop_8192 dut (
+    fft_out_flop_ dut4096 (
         .clk(clk),
         .reset(reset),
         .fft_out32(fft_out32),
         .fft_start(fft_start),
         .fft_done(fft_done),
-        .fft_out8192(fft_out8192),
+        .fft_out8192(fft_out4095),
         .buf_ready(buf_ready),
         .buf_empty(buf_empty)
     );
@@ -50,7 +49,7 @@ module fft_out_flop_8192_tb;
     endtask
 
     // Expected 16-bit words
-    logic [15:0] expected_words [0:511];
+    logic [15:0] expected_words [0:255];
 
     // Temp vars must be declared WITHOUT initialization
     logic [7:0] real8;
@@ -71,9 +70,9 @@ module fft_out_flop_8192_tb;
         $display("[TB] Reset released.");
 
         // Build expected array
-        for (i = 0; i < 512; i++) begin
+        for (i = 0; i < 256; i++) begin
             real8 = i[7:0];
-            imag8 = (255 - i) & 8'hFF;
+            imag8 = (127 - i) & 8'hFF;
             expected_words[i] = {real8, imag8};
         end
 
@@ -85,12 +84,12 @@ module fft_out_flop_8192_tb;
 
         @(posedge clk);
 
-        $display("[TB] Sending 512 samples...");
+        $display("[TB] Sending 256 samples...");
 
         // Send samples
-        for (i = 0; i < 512; i++) begin
+        for (i = 0; i < 256; i++) begin
             real8 = i[7:0];
-            imag8 = (255 - i) & 8'hFF;
+            imag8 = (127 - i) & 8'hFF;
 
             fft_out32 = {real8, 8'h00, imag8, 8'h00};
 
@@ -112,8 +111,8 @@ module fft_out_flop_8192_tb;
         end
 
         // Verify
-        for (i = 0; i < 512; i++) begin
-            extracted = fft_out8192[(16*i) +: 16]; // LSB-first
+        for (i = 0; i < 256; i++) begin
+            extracted = fft_out4095[(16*i) +: 16]; // LSB-first
             // extracted = fft_out8192[(8191 - 16*i) -: 16]; // MSB-first extraction
 
             if (extracted !== expected_words[i]) begin
