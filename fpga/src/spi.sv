@@ -88,7 +88,7 @@ module fft_out_flop_4096 (
     output logic buf_empty // indicating buffer is empty (0 words stored)
 );
 
-    logic [7:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
+    logic [8:0] cnt; // counts how many 16-bit {real8,imag8} values we stored
     logic [4095:0] q; // main 4096-bit buffer
     logic [4095:0] d; // next value for q
     logic [4095:0] d_shift; // shifted buffer
@@ -131,21 +131,16 @@ module fft_out_flop_4096 (
     always_comb begin
         
         // default: hold current value
-        d_shift = q;
         d = q;
 
         // only shift if we have not yet stored 512 words
-        if (cnt < 256) begin
+        if (fft_done && (cnt < 256)) begin
             // shift left by 16 bits
-            d_shift = q << 16;
+            logic [4095:0] shifted;
+            shifted = q << 16;
 
             // insert the 16-bit {real8, imag8} into the lowest 16 bits
-            d = {d_shift[4095:16], fft_packed16};
-        end
-        else begin
-            // if cnt == 512: hold q unchanged
-            d = q;
-            d_shift = q;
+            d = {shifted[4095:16], fft_packed16};
         end
     end
 
