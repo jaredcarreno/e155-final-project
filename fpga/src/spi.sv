@@ -68,7 +68,7 @@ module fft_spi(input logic sck,
     end
 
     // goes high once we've seen 4096 bits, indicating fft_input holding a full 4096 bit frame
-    assign fft_loaded = (counter == 12'd4096);
+    assign fft_loaded = (counter == 12'd4095);
 
 endmodule
 
