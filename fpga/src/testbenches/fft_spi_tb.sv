@@ -1,12 +1,12 @@
 
 // Author(s): Shreya Jampana
 // Date: 11/18/25
-// Purpose: Simple testbench for fft_in_flop_4096
-//          - Provide a 4096-bit frame made of 512 bytes
-//          - Check that fft_in_flop_4096:
-//                - moves from WAIT to SEND
-//                - outputs 512 samples in order (via fft_in32)
-//                - asserts fft_start after 512 samples
+// Purpose: Simple testbench for fft_spi
+//          - Send 4096 bits on SDI
+//          - Observe that fft_input fills as expected
+//          - Observe that fft_loaded asserts after one full frame
+//          - Capture SDO bits and (optionally) compare against fft_output preamble
+
 `timescale 1ns/1ps
 
 module fft_spi_tb;
@@ -15,7 +15,7 @@ module fft_spi_tb;
   // Parameters
   // ------------------------------------------------------------
   localparam int FRAME_BITS = 4096;
-  localparam int FFT_WIDTH  = 8192;
+  localparam int FFT_WIDTH  = 4096;
 
   // ------------------------------------------------------------
   // DUT I/O
@@ -72,7 +72,7 @@ module fft_spi_tb;
       for (i = 0; i < FRAME_BITS; i++) begin
 
         // Drive SDI BEFORE posedge (LSB-first)
-        sdi = mosi[i];
+        sdi = mosi[FRAME_BITS-1-i];
 
         @(posedge sck);
         miso[i] = sdo;
@@ -120,11 +120,25 @@ module fft_spi_tb;
     end
 
     send_frame(frame_in_0, frame_out_0, "FRAME0");
+	
+	@(negedge sck);
 
     if (fft_loaded)
       $display("[%0t] TB: fft_loaded is HIGH after frame0", $time);
     else
       $display("[%0t] TB WARNING: fft_loaded NOT high!", $time);
+	  
+	#1; 
+	// After frame 0
+	if (fft_input !== frame_in_0) begin
+		$display("[%0t] TB ERROR: fft_input != frame_in_0", $time);
+		$display("fft_input = %0h", fft_input);
+		$display("frame_in_0 = %0h", frame_in_0);
+		$fatal;
+	end else begin
+		$display("[%0t] TB: fft_input matches frame_in_0", $time);
+	end
+
 
     // ----------------------------------------------------------
     // Frame 1: Random data
@@ -143,5 +157,3 @@ module fft_spi_tb;
   end
 
 endmodule
-
-
