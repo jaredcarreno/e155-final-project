@@ -14,28 +14,27 @@ module spi_fft_buffer (
     output logic        start_fft
 );
 
-    // 1. SPI Deserializer (Changed to 16-bit)
-    // We only shift in 16 bits (Real part) per sample now.
+    // 1. SPI Deserializer (16-bit for Real-only input)
     logic [15:0] spi_shift_reg; 
     logic [4:0]  bit_cnt;
     logic [8:0]  word_cnt;
     
+    // Write Control Signals
     logic        buf_we;
+    logic [8:0]  ram_write_addr; // NEW: Explicit address to prevent race conditions
     
-    // 2. Data Padding
-    // We take the 16-bit Real input and add 16 bits of Zeros for Imaginary
-    // Format: {Real[15:0], Imag[15:0]}
+    // 2. Data Padding (Real -> Complex)
     logic [31:0] ram_input_padded;
     assign ram_input_padded = {spi_shift_reg, 16'h0000}; 
 
     // 3. Input RAM (512 x 32)
-    // Ensure 'ram' in memory_units.sv is sized for 512 words
+    // Uses the STABLE address signal (ram_write_addr) instead of the moving counter
     ram input_ram (
         .clk(clk), 
         .write(buf_we),
-        .write_address(word_cnt), 
+        .write_address(ram_write_addr), // <--- CHANGED THIS PORT
         .read_address(fft_read_addr), 
-        .d(ram_input_padded), // Write the padded 32-bit value
+        .d(ram_input_padded), 
         .q(data_to_fft)
     );
 
@@ -47,24 +46,28 @@ module spi_fft_buffer (
             start_fft <= 0;
             spi_shift_reg <= 0;
             buf_we <= 0;
+            ram_write_addr <= 0;
         end else begin
             // Shift in MSB first
             spi_shift_reg <= {spi_shift_reg[14:0], sdi};
             
             // Check for 16th bit (Index 15)
             if (bit_cnt == 15) begin
-                buf_we <= 1; // Pulse write enable
+                buf_we <= 1;
+                
+                // CRITICAL FIX: Capture current address BEFORE incrementing
+                ram_write_addr <= word_cnt; 
                 
                 // Manage Word Count
                 if (word_cnt == 511) begin
                     start_fft <= 1; // Buffer full, trigger FFT
-                    word_cnt <= 0;  // Wrap around (circular buffer)
+                    word_cnt <= 0;  // Wrap around
                 end else begin
                     word_cnt <= word_cnt + 1;
                     start_fft <= 0;
                 end
                 
-                bit_cnt <= 0; // Reset bit counter for next word
+                bit_cnt <= 0; // Reset bit counter
             end else begin
                 buf_we <= 0;
                 bit_cnt <= bit_cnt + 1;
@@ -74,23 +77,18 @@ module spi_fft_buffer (
     end
     
     // 5. Output RAM (For reading results back to MCU)
-    // This part remains 32-bit because the FFT output is complex (Real + Imag)
-    // You will need to read 32 bits per bin from the MCU to get the full result.
     logic [31:0] out_spi_data;
     
     ram output_ram (
         .clk(clk),
         .write(fft_write_en),
         .write_address(fft_write_addr),
-        .read_address(word_cnt), // SPI reads using the same word counter
+        .read_address(word_cnt), // Reads follow the current word count
         .d(data_from_fft),
         .q(out_spi_data)
     );
 
-    // Output Serializer
-    // We send out the 32-bit complex result.
-    // Note: If you only read 16 bits on the MCU, you'll get just the Real part,
-    // which is a valid strategy if you don't care about phase.
+    // Output Serializer (Sends full 32-bit complex result)
     assign sdo = out_spi_data[31 - bit_cnt]; 
 
 endmodule
