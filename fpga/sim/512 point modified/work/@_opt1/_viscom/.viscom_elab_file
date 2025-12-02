@@ -1,0 +1,1 @@
+C:/lscc/radiant/2025.1/questasim/win64/VisualizerRls/bin/viscom.exe -nolock -quiet -jmem_size 393216 work.spi_tb(fast) -quiet -auto_acc_if_foreign -work work +acc -L iCE40UP -Lf iCE40UP -allow_unnamed -o _opt1 -id 11-78465c7f6ef7-692e7682-6c-9d0 {+__design_bin_path+C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/sim/512 point modified} +__betafsm
