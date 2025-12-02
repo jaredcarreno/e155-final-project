@@ -58,3 +58,42 @@ char spiSendReceive(char send){
     // Return the CIPO data
     return recieve;
 }
+
+void spiWrite16(uint16_t word)
+{
+    // Pull CS low (active)
+    digitalWrite(SPI_CS, 0);
+
+    // Split into two bytes (MSB first)
+    uint8_t msb = (word >> 8) & 0xFF;
+    uint8_t lsb = word & 0xFF;
+
+    // Send MSB then LSB
+    spiSendReceive(msb);
+    spiSendReceive(lsb);
+
+    // Release CS high (latch)
+    digitalWrite(SPI_CS, 1);
+}
+
+void spiWrite24(uint8_t address, uint16_t data)
+{
+    uint8_t data_msb = (data >> 8) & 0xFF;
+    uint8_t data_lsb = data & 0xFF;
+
+    // Pull CS low to start frame
+    digitalWrite(SPI_CS, 0);
+
+    // Send address (8 bits)
+    spiSendReceive(address);
+
+    // Send data MSB
+    spiSendReceive(data_msb);
+
+    // Send data LSB
+    spiSendReceive(data_lsb);
+
+    // Pull CS high to latch transfer
+    digitalWrite(SPI_CS, 1);
+}
+
