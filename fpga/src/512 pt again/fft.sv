@@ -16,6 +16,8 @@ module fft (
     logic ram_clk;
     logic slow_clk;
 
+    // HSOSC #(.CLKHF_DIV ("0b10")) hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk));
+
     always_ff @(posedge clk) begin
         clk_counter <= clk_counter + 1'b1;
     end
