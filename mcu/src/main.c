@@ -26,97 +26,103 @@ void process_block(volatile uint8_t *data, uint32_t size);
 static inline void copy_u16(uint8_t *dst, uint16_t *src, uint32_t count);
 
 
-int main(void)
-{
+int main(void){
     SystemInit();
-    // ADDING BUTTON
-    gpioEnable(GPIO_PORT_A);
-    pinMode(BUTTON_PIN, GPIO_INPUT);
-
-    initTIM(TIM15);
-
-    DMA_Init();
-    DMA_Config();
-    ADC_Init();
-    initSPI(2, 0, 0); // setting baud rate to 2 for now
-
-    while (1)
-    {
-    if (!digitalRead(BUTTON_PIN))
-    {
-      // ----- STOP SEQUENCE -----
-
-      // 1. Stop ADC
-      ADC1->CR |= ADC_CR_ADSTP;
-      while (ADC1->CR & ADC_CR_ADSTP);
-
-      // 2. Disable DMA
-      DMA1_Channel1->CCR &= ~DMA_CCR_EN;
-
-      // 3. Clear DMA flags
-      DMA1->IFCR = DMA_IFCR_CHTIF1 | DMA_IFCR_CTCIF1;
-      continue;
-      }
-    else
-    {
-      // ----- START SEQUENCE -----
-
-      // If ADC isn't running, restart it properly
-      if (!(ADC1->CR & ADC_CR_ADSTART))
-      {
-          // Reset DMA length
-          DMA1_Channel1->CNDTR = 1024;
-
-          // Re-enable DMA channel
-          DMA1_Channel1->CCR |= DMA_CCR_EN;
-
-          // Start ADC conversions
-          ADC1->CR |= ADC_CR_ADSTART;
-          }
-    }
-
-
-    if (dma_flag == 1)
-    {
-        dma_flag = 0;
-        copy_u16(proc_buf_A, (uint16_t*)&adc_buffer[0], 512);
-        printf("DMA buff halfway\n");
-    }
-    else if (dma_flag == 2)
-    {
-        dma_flag = 0;
-        copy_u16(proc_buf_B, (uint16_t*)&adc_buffer[512], 512);
-        printf("DMA buff full\n");
-    }
-  }
-
-    //while (1)
-    //{
-    //      //    // Just convert the first two DMA samples 
-    //      // v_lvl[0] = (3.3 * adc_buffer[0]) / 4095.0f;
-    //      // v_lvl[1] = (3.3 * adc_buffer[1]) / 4095.0f;
-    //      // printf("ADC Values: %u, %u\n", adc_buffer[0], adc_buffer[1]);
-    //      // printf("Voltage Levels: %.3f V, %.3f V\n", v_lvl[0], v_lvl[1]);
-    //    if (dma_flag == 1)
-    //    {
-    //        dma_flag = 0;
-
-    //        // DMA finished samples 0–511
-    //        copy_u16(proc_buf_A, (uint16_t*)&adc_buffer[0], 512);
-    //        printf("DMA buff halfway");
-
-    //        // process_block(proc_buf_A, 512);
-    //    }
-    //    else if (dma_flag == 2){
-    //        dma_flag = 0;
-
-    //        // DMA finished samples 512–1023
-    //        printf("DMA buff full");
-    //        copy_u16(proc_buf_B, (uint16_t*)&adc_buffer[512], 512);
-
-    //        // process_block(proc_buf_B, 512);
-    //    }
+    configureDAC();
+    setDAC(2.3);
 }
+
+// int main(void)
+// {
+//     SystemInit();
+//     // ADDING BUTTON
+//     gpioEnable(GPIO_PORT_A);
+//     pinMode(BUTTON_PIN, GPIO_INPUT);
+
+//     initTIM(TIM15);
+
+//     DMA_Init();
+//     DMA_Config();
+//     ADC_Init();
+//     initSPI(2, 0, 0); // setting baud rate to 2 for now
+
+//     while (1)
+//     {
+//     if (!digitalRead(BUTTON_PIN))
+//     {
+//       // ----- STOP SEQUENCE -----
+
+//       // 1. Stop ADC
+//       ADC1->CR |= ADC_CR_ADSTP;
+//       while (ADC1->CR & ADC_CR_ADSTP);
+
+//       // 2. Disable DMA
+//       DMA1_Channel1->CCR &= ~DMA_CCR_EN;
+
+//       // 3. Clear DMA flags
+//       DMA1->IFCR = DMA_IFCR_CHTIF1 | DMA_IFCR_CTCIF1;
+//       continue;
+//       }
+//     else
+//     {
+//       // ----- START SEQUENCE -----
+
+//       // If ADC isn't running, restart it properly
+//       if (!(ADC1->CR & ADC_CR_ADSTART))
+//       {
+//           // Reset DMA length
+//           DMA1_Channel1->CNDTR = 1024;
+
+//           // Re-enable DMA channel
+//           DMA1_Channel1->CCR |= DMA_CCR_EN;
+
+//           // Start ADC conversions
+//           ADC1->CR |= ADC_CR_ADSTART;
+//           }
+//     }
+
+
+//     if (dma_flag == 1)
+//     {
+//         dma_flag = 0;
+//         copy_u16(proc_buf_A, (uint16_t*)&adc_buffer[0], 512);
+//         printf("DMA buff halfway\n");
+//     }
+//     else if (dma_flag == 2)
+//     {
+//         dma_flag = 0;
+//         copy_u16(proc_buf_B, (uint16_t*)&adc_buffer[512], 512);
+//         printf("DMA buff full\n");
+//     }
+//   }
+
+//     //while (1)
+//     //{
+//     //      //    // Just convert the first two DMA samples 
+//     //      // v_lvl[0] = (3.3 * adc_buffer[0]) / 4095.0f;
+//     //      // v_lvl[1] = (3.3 * adc_buffer[1]) / 4095.0f;
+//     //      // printf("ADC Values: %u, %u\n", adc_buffer[0], adc_buffer[1]);
+//     //      // printf("Voltage Levels: %.3f V, %.3f V\n", v_lvl[0], v_lvl[1]);
+//     //    if (dma_flag == 1)
+//     //    {
+//     //        dma_flag = 0;
+
+//     //        // DMA finished samples 0–511
+//     //        copy_u16(proc_buf_A, (uint16_t*)&adc_buffer[0], 512);
+//     //        printf("DMA buff halfway");
+
+//     //        // process_block(proc_buf_A, 512);
+//     //    }
+//     //    else if (dma_flag == 2){
+//     //        dma_flag = 0;
+
+//     //        // DMA finished samples 512–1023
+//     //        printf("DMA buff full");
+//     //        copy_u16(proc_buf_B, (uint16_t*)&adc_buffer[512], 512);
+
+//     //        // process_block(proc_buf_B, 512);
+//     //    }
+// }
 
 void ADC_Init(void)
 {
