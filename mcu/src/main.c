@@ -1,106 +1,79 @@
+#include "arm_math.h"
+#include "arm_const_structs.h"
+#include <string.h>
 
-#include "stm32l4xx.h"
-#include "main.h"
-#include <stdint.h>
-#include <stdio.h>
+// ---------------------------------------------------------
+// 1) Input: 1024 integers (re0, im0, re1, im1, ..., re511, im511)
+// ---------------------------------------------------------
+int16_t inputInt16[1024];   // Fill this with your data
 
-#define SAMPLE_RATE 15000     // 15 kHz
-#define DURATION_S  1         // 1 second
-#define NUM_SAMPLES (SAMPLE_RATE * DURATION_S)     // 15000 samples
-#define TX_BYTES    (NUM_SAMPLES * 2)              // 2 SPI bytes per sample
-#define RX_BYTES    TX_BYTES                       // receive same amount
-
-// Buffer for ALL received data
-uint8_t spi_rx_buffer[RX_BYTES];
+// ---------------------------------------------------------
+// 2) Working buffers
+// ---------------------------------------------------------
+float32_t fftInputF32[1024];
+float32_t fftOutputF32[1024];
 
 
-// =====================================================
-// sendWave() – send 1 sec of square wave, padded to 16 bits,
-// and capture ALL returned bytes.
-// =====================================================
-
-void sendWave(float waveFreqHz)
+// ---------------------------------------------------------
+// Convert int16 → float32 and run 512-point inverse FFT
+// ---------------------------------------------------------
+void runInverseFFT512(void)
 {
-    uint32_t halfPeriod = (uint32_t)(SAMPLE_RATE / (2.0f * waveFreqHz));
-    if (halfPeriod == 0) return;
-
-    uint8_t hi = 0x64;
-    uint8_t lo = 0x00;
-    uint8_t current = hi;
-    uint32_t counter = 0;
-    uint32_t rxIndex = 0;
-
-    for (uint32_t i = 0; i < NUM_SAMPLES; i++)
+    // ----- Step 1: Convert INT16 → FLOAT32 -----
+    for (int i = 0; i < 1024; i++)
     {
-        // toggle square wave
-        if (counter >= halfPeriod)
-        {
-            current = (current == hi) ? lo : hi;
-            counter = 0;
-        }
-        counter++;
-
-        // -------- SEND 16 BITS --------
-        uint8_t rx1 = spiSendReceive(0x00);     // MSB padding
-        uint8_t rx2 = spiSendReceive(current);  // actual square wave 8-bit sample
-
-        // -------- STORE RETURNED DATA --------
-        spi_rx_buffer[rxIndex++] = rx1;
-        spi_rx_buffer[rxIndex++] = rx2;
+        fftInputF32[i] = (float32_t)inputInt16[i];
     }
+
+    // Copy input to output (CMSIS FFT is in-place)
+    memcpy(fftOutputF32, fftInputF32, sizeof(fftInputF32));
+
+    // ----- Step 2: Select CMSIS 512-Point CFFT -----
+    const arm_cfft_instance_f32 *cfft = &arm_cfft_sR_f32_len512;
+
+    // ----- Step 3: Run inverse FFT -----
+    // ifftFlag = 1 → inverse FFT
+    // bitReverseFlag = 1 → correct output ordering
+    arm_cfft_f32(cfft, fftOutputF32, 1, 1);
+
+    // ----- Step 4: Optional: normalize by N = 512 -----
+    // Many CMSIS versions do NOT normalize the IFFT automatically.
+    // Enable this if your output looks ~512x too large.
+    arm_scale_f32(fftOutputF32, 1.0f/512.0f, fftOutputF32, 1024);
+
+    // fftOutputF32 now contains time-domain samples:
+    // fftOutputF32[0] = x(0)
+    // fftOutputF32[1] = imag residue (should be ~0)
+    // fftOutputF32[2] = x(1)
+    // ...
 }
 
 
-// =====================================================
-// Helper: Print rx buffer in 32-bit words
-// =====================================================
-void print_rx_32bit_chunks(void)
-{
-    printf("\n--- Returned SPI Data (32-bit hex words) ---\n");
-
-    uint32_t totalWords = RX_BYTES / 4;
-
-    for (uint32_t i = 0; i < totalWords; i++)
-    {
-        uint32_t b0 = spi_rx_buffer[i*4 + 0];
-        uint32_t b1 = spi_rx_buffer[i*4 + 1];
-        uint32_t b2 = spi_rx_buffer[i*4 + 2];
-        uint32_t b3 = spi_rx_buffer[i*4 + 3];
-
-        uint32_t word =
-              (b0 << 24)
-            | (b1 << 16)
-            | (b2 << 8)
-            | (b3);
-
-        printf("0x%08lX\n", word);
-    }
-}
-
-
-// =====================================================
-// MAIN
-// =====================================================
+// ---------------------------------------------------------
+// Example main()
+// ---------------------------------------------------------
 int main(void)
 {
-    // SystemInit();
-    configureFlash();
-    configureClock();
-    gpioEnable(GPIO_PORT_A);
-    gpioEnable(GPIO_PORT_B);
-    gpioEnable(GPIO_PORT_C);
-  
-    RCC->APB2ENR |= (RCC_APB2ENR_TIM15EN);
-    initTIM(TIM15);
+    HAL_Init();
+    SystemClock_Config();   // Your clock setup
 
-    initSPI(6, 0, 0);   // example config: baud=2, CPOL=0, CPHA=0
+    // ---- Fill inputInt16[] with your FFT frequency data here ----
+    // Example:
+    // inputInt16[0] = re0;
+    // inputInt16[1] = im0;
+    // inputInt16[2] = re1;
+    // inputInt16[3] = im1;
+    // ...
 
-    printf("Sending 1 kHz square wave...\n");
-    sendWave(1000.0f);
 
-    printf("Transmission complete.\n");
+    runInverseFFT512();
 
-    print_rx_32bit_chunks();
+    // Now fftOutputF32[] holds real time-domain values
+    // Imaginary parts should be nearly zero.
 
-    // while (1);
+
+    while (1)
+    {
+        // Do something with the result...
+    }
 }
