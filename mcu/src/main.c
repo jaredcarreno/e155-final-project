@@ -7,16 +7,19 @@
 #define FFT_N             512
 #define HALF_BINS         (FFT_N / 2)      // 256
 #define NUM_PHASE_LEVELS  16               // number of phase buckets
-#define AUDIO_SCALE       (1.0f / 128.0f)  // scale factor to convert 8-bit signed integers into float values
+#define AUDIO_SCALE       (1.0f / 32768.0f)  // scale factor to convert 8-bit signed integers into float values
 
 #ifndef PI_F
 #define PI_F 3.14159265358979323846f
 #endif
 
+
 /**
- * spi_rx : 512 bytes from FPGA over SPI. Each FFT bin k is packed as:
- *  spi_rx[2*k]   = real8
- *  spi_rx[2*k+1] = imag8
+ * spi_rx : 1024 bytes from FPGA over SPI. Each FFT bin k is packed as a 32-bit word:   
+ *  [4*k + 0] = real16 MSB                                                               
+ *  [4*k + 1] = real16 LSB                                                               
+ *  [4*k + 2] = imag16 MSB                                                               
+ *  [4*k + 3] = imag16 LSB 
  *
  * X_full : output array holding a full 512-point complex spectrum in alternating format:
  *  X_full[2*k]   = Re[k]
@@ -39,7 +42,8 @@ void fft_postprocess_phase_quantize(const uint8_t *spi_rx, float *X_full)
 
     // Step 1: Handle DC bin (bin 0) to take the real part and ignore the imaginary noise
     {
-        int8_t r0 = (int8_t)spi_rx[0];
+       // real16 is in bytes [0] (MSB) and [1] (LSB)
+        int16_t r0 = (int16_t)(((uint16_t)spi_rx[0] << 8) | spi_rx[1]);
 
         X_full[0] = (float)r0 * AUDIO_SCALE;  // Re[0]
         X_full[1] = 0.0f;                     // Im[0]
@@ -48,13 +52,14 @@ void fft_postprocess_phase_quantize(const uint8_t *spi_rx, float *X_full)
     // Step 2: Unpack bins 1..254 and convert them to floats. Then, compute magnitude + phase
     for (int k = 1; k < HALF_BINS - 1; k++) {
 
-        // Unpack raw 8-bit real & imag from FPGA frame
-        int8_t real8 = (int8_t)spi_rx[2 * k];
-        int8_t imag8 = (int8_t)spi_rx[2 * k + 1];
+        // Unpack raw 16-bit real & imag from FPGA frame 
+        uint16_t base = 4 * k; 
+        int16_t real16 = (int16_t)(((uint16_t)spi_rx[base] << 8) | spi_rx[base + 1]);  
+        int16_t imag16 = (int16_t)(((uint16_t)spi_rx[base + 2] << 8) | spi_rx[base + 3]); 
 
         // Convert to float values
-        float Re = (float)real8 * AUDIO_SCALE;
-        float Im = (float)imag8 * AUDIO_SCALE;
+        float Re = (float)real16 * AUDIO_SCALE;  
+        float Im = (float)imag16 * AUDIO_SCALE;
 
         // Compute magnitude and phase
         float mag = sqrtf((Re * Re) + (Im * Im));
@@ -64,7 +69,7 @@ void fft_postprocess_phase_quantize(const uint8_t *spi_rx, float *X_full)
         float phi_q = phase_step * roundf(phi / phase_step);
 
         // Convert back to complex using same magnitude
-        float sin_phi
+        float sin_phi;
         float cos_phi;
         arm_sin_cos_f32(phi_q, &sin_phi, &cos_phi); // function to store sin and cos of phi
 
@@ -79,9 +84,12 @@ void fft_postprocess_phase_quantize(const uint8_t *spi_rx, float *X_full)
     // Step 4: Handle bin 255 (treated as real-only)
     {
         int k = HALF_BINS - 1; // 255
-        int8_t real8 = (int8_t)spi_rx[2 * k];
 
-        X_full[2 * k] = (float)real8 * AUDIO_SCALE;
+        // real16 for bin 255 is at bytes [4*k] and [4*k+1]                         
+        uint16_t base = 4 * k;                                        
+        int16_t real16 = (int16_t)(((uint16_t)spi_rx[base] << 8) | spi_rx[base + 1]); 
+
+        X_full[2 * k] = (float)real16 * AUDIO_SCALE;
         X_full[2 * k + 1] = 0.0f;
     }
 
