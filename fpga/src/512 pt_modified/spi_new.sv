@@ -21,7 +21,7 @@ module spi_fft_buffer (
 
     // Pad 16-bit input (Real) with 16-bit Zeros (Imag)
     logic [31:0] ram_input_padded;
-    assign ram_input_padded = {spi_shift_reg, 16'h0000}; 
+    assign ram_input_padded = {8'h00, spi_shift_reg, 16'h0000}; 
 
     ram input_ram (
         .clk(clk), 
@@ -32,8 +32,8 @@ module spi_fft_buffer (
         .q(data_to_fft)
     );
 
-    always_ff @(posedge sck or posedge reset) begin
-        if (reset) begin
+    always_ff @(posedge sck) begin
+        if (~reset) begin
             wr_bit_cnt <= 0;
             wr_word_cnt <= 0;
             start_fft <= 0;
@@ -80,8 +80,8 @@ module spi_fft_buffer (
     );
 
     // Read Counter Logic
-    always_ff @(posedge sck or posedge reset) begin
-        if (reset) begin
+    always_ff @(posedge sck) begin
+        if (~reset) begin
             rd_bit_cnt <= 0;
             rd_word_cnt <= 0;
         end else begin

@@ -21,7 +21,7 @@ module fft_controller (
     // Start processing logic
     always_ff @(posedge slow_clk) begin
         if (start) processing <= 1;
-        else if (reset || done)  processing <= 0;
+        else if ((~reset) || done)  processing <= 0;
     end
 
     // Instantiate Counter
@@ -33,7 +33,7 @@ module fft_controller (
 
     // Output Address Counter
     always_ff @(posedge slow_clk) begin
-        if (reset) out_address <= 0;
+        if (~reset) out_address <= 0;
         else if (done) out_address <= out_address + 1'b1;
     end
 
@@ -81,7 +81,7 @@ module fft_counter (
     output logic [8:0] butterfly_iter 
 );
     always_ff @(posedge clk) begin
-        if (reset) begin
+        if (~reset) begin
             fft_level <= 0;
             butterfly_iter <= 0;
         end else if(processing == 1 & ~done) begin

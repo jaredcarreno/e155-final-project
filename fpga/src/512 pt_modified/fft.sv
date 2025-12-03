@@ -3,16 +3,16 @@ module fft (
     input  logic sdi, 
     input  logic reset, 
     input  logic full_reset,
-    // input  logic clk,      <-- ADD FOR TESTBENCHING
+    input  logic clk,     // <-- ADD FOR TESTBENCHING
     output logic sdo, 
     output logic done
 );
 
     logic [1:0] clk_counter = 0;
     logic ram_clk, slow_clk;
-    logic clk;
+    // logic clk;
 
-    HSOSC #(.CLKHF_DIV ("0b00")) hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk)); // 48 MHz
+    // HSOSC #(.CLKHF_DIV ("0b10")) hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk)); // 12 MHz
 
     always_ff @(posedge clk) clk_counter <= clk_counter + 1'b1;
     assign ram_clk = clk_counter[0];
@@ -49,8 +49,8 @@ module fft (
     );
 
     // State Machine
-    always_ff @(posedge slow_clk or posedge reset) begin
-        if (reset) begin
+    always_ff @(posedge slow_clk) begin
+        if (~reset) begin
             state <= IDLE;
             load_ptr <= 0;
         end else begin
@@ -82,8 +82,8 @@ module fft (
     logic [8:0] addr_delayed;
     logic       en_delayed;
 
-    always_ff @(posedge slow_clk or posedge reset) begin
-        if (reset) begin
+    always_ff @(posedge slow_clk) begin
+        if (~reset) begin
             addr_delayed <= 0;
             en_delayed <= 0;
         end else begin
