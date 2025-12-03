@@ -27,9 +27,19 @@ static inline void copy_u16(uint8_t *dst, uint16_t *src, uint32_t count);
 
 
 int main(void){
-    SystemInit();
+    // SystemInit();
+    configureFlash();
+    configureClock();
+    gpioEnable(GPIO_PORT_A);
+    gpioEnable(GPIO_PORT_B);
+    gpioEnable(GPIO_PORT_C);
+  
+    RCC->APB2ENR |= (RCC_APB2ENR_TIM15EN);
+    initTIM(TIM15);
+
     configureDAC();
-    setDAC(2.3);
+    delay_millis(TIM15, 100);
+    setDAC(2.0f);
 }
 
 // int main(void)

@@ -36,5 +36,6 @@ char spiSendReceive(char send);
 
 
 void spiWrite16(uint16_t word);
+void spiWrite24(uint8_t address, uint16_t data);
 
 #endif

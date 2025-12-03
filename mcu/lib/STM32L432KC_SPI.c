@@ -6,6 +6,7 @@
 
 #include "STM32L432KC_SPI.h"
 #include "STM32L432KC_GPIO.h"
+#include "stdio.h"
 // #include "DS1722.h"
 
 
@@ -80,6 +81,10 @@ void spiWrite24(uint8_t address, uint16_t data)
 {
     uint8_t data_msb = (data >> 8) & 0xFF;
     uint8_t data_lsb = data & 0xFF;
+    uint32_t frame = ((uint32_t)address << 16) | data;
+
+    // Print 24-bit frame as hex (always 6 hex digits)
+    printf("SPI 24-bit frame: 0x%06lX\n", frame);
 
     // Pull CS low to start frame
     digitalWrite(SPI_CS, 0);
