@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>   // for memset
+#include <stdio.h>
 
 #define FFT_N             512
 #define HALF_BINS         (FFT_N / 2)      // 256
@@ -141,10 +142,29 @@ static void fill_fake_fft_frame(void)
 
 int main(void)
 {
-
     fill_fake_fft_frame();
 
     fft_postprocess_phase_quantize(spi_rx_test, X_full_test);
+
+    int k = 10;
+    int k_mirror = FFT_N - k; // 512 - 10 = 502
+
+    printf("\n=== PHASE QUANT TEST ===\n");
+
+    // 1) DC bin
+    printf("DC bin (k=0):\n");
+    printf("  Re[0] = %f\n", X_full_test[0]);
+    printf("  Im[0] = %f\n", X_full_test[1]);
+
+    // 2) Your active bin
+    printf("\nBin %d:\n", k);
+    printf("  Re[%d] = %f\n", k, X_full_test[2*k]);       // Re[10]
+    printf("  Im[%d] = %f\n", k, X_full_test[2*k + 1]);   // Im[10]
+
+    // 3) Mirror bin
+    printf("\nMirror bin %d:\n", k_mirror);
+    printf("  Re[%d] = %f\n", k_mirror, X_full_test[2*k_mirror]);       // Re[502]
+    printf("  Im[%d] = %f\n", k_mirror, X_full_test[2*k_mirror + 1]);   // Im[502]
 
     while (1) 
     { 
