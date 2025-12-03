@@ -3,11 +3,12 @@
 #include "arm_math.h"   // CMSIS-DSP: arm_sin_cos_f32, etc.
 #include <math.h>
 #include <stdint.h>
+#include <string.h>   // for memset
 
 #define FFT_N             512
 #define HALF_BINS         (FFT_N / 2)      // 256
 #define NUM_PHASE_LEVELS  16               // number of phase buckets
-#define AUDIO_SCALE       (1.0f / 32768.0f)  // scale factor to convert 8-bit signed integers into float values
+#define AUDIO_SCALE       (1.0f / 32768.0f)  // scale factor to convert 16-bit signed integers into float values
 
 #ifndef PI_F
 #define PI_F 3.14159265358979323846f
@@ -114,3 +115,39 @@ void fft_postprocess_phase_quantize(const uint8_t *spi_rx, float *X_full)
     }
 }
 
+
+
+// FOR TESTING THE PHASE QUANTIZATION
+
+static uint8_t spi_rx_test[1024];        // fake FPGA frame
+static float   X_full_test[2 * FFT_N];   // output spectrum
+
+// Fill spi_rx_test with a simple known pattern: e.g. only bin 10 nonzero
+static void fill_fake_fft_frame(void)
+{
+    memset(spi_rx_test, 0, sizeof(spi_rx_test));
+
+    int k = 10;                  // choose some bin
+    uint16_t base = 4 * k;
+    int16_t real16 = 10000;      // arbitrary non-zero magnitude
+    int16_t imag16 = 0;
+
+    spi_rx_test[base + 0] = (uint8_t)((real16 >> 8) & 0xFF);  // real MSB
+    spi_rx_test[base + 1] = (uint8_t)( real16       & 0xFF);  // real LSB
+    spi_rx_test[base + 2] = (uint8_t)((imag16 >> 8) & 0xFF);  // imag MSB
+    spi_rx_test[base + 3] = (uint8_t)( imag16       & 0xFF);  // imag LSB
+
+}
+
+int main(void)
+{
+
+    fill_fake_fft_frame();
+
+    fft_postprocess_phase_quantize(spi_rx_test, X_full_test);
+
+    while (1) 
+    { 
+
+    }
+}
