@@ -18,6 +18,7 @@ uint8_t spi_rx_buffer[RX_BYTES];
 // sendWave() – send 1 sec of square wave, padded to 16 bits,
 // and capture ALL returned bytes.
 // =====================================================
+
 void sendWave(float waveFreqHz)
 {
     uint32_t halfPeriod = (uint32_t)(SAMPLE_RATE / (2.0f * waveFreqHz));
@@ -82,8 +83,17 @@ void print_rx_32bit_chunks(void)
 // =====================================================
 int main(void)
 {
-    SystemInit();
-    initSPI(2, 0, 0);   // example config: baud=2, CPOL=0, CPHA=0
+    // SystemInit();
+    configureFlash();
+    configureClock();
+    gpioEnable(GPIO_PORT_A);
+    gpioEnable(GPIO_PORT_B);
+    gpioEnable(GPIO_PORT_C);
+  
+    RCC->APB2ENR |= (RCC_APB2ENR_TIM15EN);
+    initTIM(TIM15);
+
+    initSPI(6, 0, 0);   // example config: baud=2, CPOL=0, CPHA=0
 
     printf("Sending 1 kHz square wave...\n");
     sendWave(1000.0f);
