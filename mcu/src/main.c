@@ -1,6 +1,10 @@
-#include "arm_math.h"
+
+#include "C:\ifft_project\CMSIS-DSP\Include\arm_math.h"
 #include "arm_const_structs.h"
 #include <string.h>
+#include <stdint.h>
+#include "main.h"
+
 
 // ---------------------------------------------------------
 // 1) Input: 1024 integers (re0, im0, re1, im1, ..., re511, im511)
@@ -54,8 +58,18 @@ void runInverseFFT512(void)
 // ---------------------------------------------------------
 int main(void)
 {
-    HAL_Init();
-    SystemClock_Config();   // Your clock setup
+    //HAL_Init();
+    //SystemClock_Config();   // Your clock setup
+    configureFlash();
+    configureClock();
+    gpioEnable(GPIO_PORT_A);
+    gpioEnable(GPIO_PORT_B);
+    gpioEnable(GPIO_PORT_C);
+  
+    RCC->APB2ENR |= (RCC_APB2ENR_TIM15EN);
+    initTIM(TIM15);
+
+
 
     // ---- Fill inputInt16[] with your FFT frequency data here ----
     // Example:
