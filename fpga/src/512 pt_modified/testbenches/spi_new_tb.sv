@@ -37,8 +37,6 @@ module spi_fft_buffer_tb;
 
     // ----------------------------------------------------------------
     // DUT Instance
-    // NOTE: This assumes your module is named spi_fft_buffer with
-    // the ports we discussed.
     // ----------------------------------------------------------------
     spi_fft_buffer dut (
         .sck          (sck),
@@ -60,12 +58,8 @@ module spi_fft_buffer_tb;
     initial clk = 1'b0;
     always #5 clk = ~clk;   // 100 MHz
 
-    // We'll drive sck manually in a task so we have full control over
-    // exactly when each bit is clocked in.
-
     // ----------------------------------------------------------------
     // Shadow reconstruction of bytes using SAME shift logic
-    // as in spi_fft_buffer (for checking correctness).
     // ----------------------------------------------------------------
     logic [7:0] expected_bytes [0:NUM_BYTES-1];
 
@@ -87,20 +81,7 @@ module spi_fft_buffer_tb;
             sck = 1'b1;
             #3;  // total 5 ns high time
 
-            // At this point, on real hardware, spi_fft_buffer's always_ff
-            // @ (posedge sck) will have just executed.
-
             // Mirror the same shift logic locally:
-            // In your code you do:
-            //   spi_shift_reg <= {spi_shift_reg[6:0], sdi};
-            //   if (bit_cnt_sck == 3'd7)
-            //      sample_byte_sck <= {spi_shift_reg[6:0], sdi};
-            //   if (bit_cnt_sck == 3'd7) bit_cnt_sck <= 0;
-            //   else bit_cnt_sck <= bit_cnt_sck + 1;
-            //
-            // Because of non-blocking semantics, sample_byte uses
-            // the "old" shift_reg. We mirror that here.
-
             if (tb_bit_cnt == 3'd7) begin
                 // capture the "byte" the DUT will see
                 expected_bytes[tb_byte_index] = {tb_shift_reg[6:0], bit_val};
@@ -121,9 +102,6 @@ module spi_fft_buffer_tb;
 
     // ----------------------------------------------------------------
     // Task: send an entire 4096-bit frame on SDI
-    // Here we just use a simple pattern on the bit stream, e.g. i[0]
-    // or $urandom, and let the shadow logic figure out what bytes
-    // the DUT will see.
     // ----------------------------------------------------------------
     task automatic send_frame;
         int bit_index;
@@ -149,9 +127,13 @@ module spi_fft_buffer_tb;
     // Main Stimulus
     // ----------------------------------------------------------------
     initial begin
+        // --- 1. DECLARE ALL VARIABLES AT THE TOP ---
         int i;
         logic [7:0] actual_byte;
+        int timeout_cycles; // <--- MOVED HERE (Fixed)
 
+        // --- 2. EXECUTABLE CODE STARTS HERE ---
+        
         // Default values
         sck           = 1'b0;
         sdi           = 1'b0;
@@ -176,11 +158,9 @@ module spi_fft_buffer_tb;
 
         // ----------------------------------------------------------------
         // 2) Wait for start_fft to assert in the clk domain
-        //     (This means the internal word counter hit 511.)
         // ----------------------------------------------------------------
         $display("[%0t] TB: Waiting for start_fft...", $time);
 
-        int timeout_cycles;
         timeout_cycles = 0;
         while (!start_fft && timeout_cycles < 2000) begin
             @(posedge clk);
@@ -196,8 +176,6 @@ module spi_fft_buffer_tb;
 
         // ----------------------------------------------------------------
         // 3) Read back all 512 words from the input RAM via data_to_fft.
-        //    We expect data_to_fft = {8'h00, expected_bytes[i], 16'h0000}.
-        //    Note: RAM has one-cycle read latency.
         // ----------------------------------------------------------------
         $display("[%0t] TB: Reading back 512 words from input RAM...", $time);
 
