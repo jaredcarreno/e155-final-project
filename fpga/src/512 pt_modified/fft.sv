@@ -1,10 +1,18 @@
-// Top-level module connecting SPI Buffer <-> FFT Controller
 module fft (
-    input  logic sck, sdi, reset, full_reset, clk,
-    output logic sdo, done
+    input  logic sck, 
+    input  logic sdi, 
+    input  logic reset, 
+    input  logic full_reset,
+    // input  logic clk,      <-- ADD FOR TESTBENCHING
+    output logic sdo, 
+    output logic done
 );
+
     logic [1:0] clk_counter = 0;
     logic ram_clk, slow_clk;
+    logic clk;
+
+    HSOSC #(.CLKHF_DIV ("0b00")) hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk)); // 48 MHz
 
     always_ff @(posedge clk) clk_counter <= clk_counter + 1'b1;
     assign ram_clk = clk_counter[0];
@@ -17,13 +25,13 @@ module fft (
     logic        fft_load, fft_start, fft_processing, fft_done;
     logic [8:0]  fft_load_addr;
     logic [31:0] fft_data_out;
-    logic [8:0]  fft_out_addr_probe; 
+    logic [8:0]  fft_out_addr_probe; // NEW: Robust Address Signal
 
     typedef enum logic [1:0] {IDLE, LOAD, PROCESS, DONE} state_t;
     state_t state;
     logic [8:0] load_ptr;
 
-    // Instances
+    // RAM-Based SPI Buffer
     spi_fft_buffer spi_inst (
         .sck(sck), .sdi(sdi), .reset(reset), .sdo(sdo), .clk(clk),
         .data_to_fft(spi_to_fft_data), .data_from_fft(fft_to_spi_data),
@@ -31,6 +39,7 @@ module fft (
         .fft_write_en(spi_write_en), .start_fft(spi_buffer_full)
     );
 
+    // FFT Controller (Connected to Probe)
     fft_controller fft_unit (
         .clk(clk), .ram_clk(ram_clk), .slow_clk(slow_clk), .reset(reset),
         .start(fft_start), .load(fft_load), .load_address(fft_load_addr),
@@ -47,18 +56,15 @@ module fft (
         end else begin
             case (state)
                 IDLE: if (spi_buffer_full) state <= LOAD;
-                
                 LOAD: begin
                     if (load_ptr == 511) begin
                         state <= PROCESS;
                         load_ptr <= 0;
                     end else load_ptr <= load_ptr + 1;
                 end
-                
                 PROCESS: if (fft_done) state <= DONE;
-                
                 DONE: state <= DONE;
-            endcase // <--- FIXED: Was 'end', must be 'endcase'
+            endcase
         end
     end
 
@@ -72,7 +78,7 @@ module fft (
     end
     
     // --- ROBUST OUTPUT LOGIC ---
-    // Delay signals by 1 cycle to match RAM latency
+    // Delay address and enable by 1 cycle to match RAM read latency
     logic [8:0] addr_delayed;
     logic       en_delayed;
 
