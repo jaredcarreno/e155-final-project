@@ -1,10 +1,13 @@
 // Top level module
-module fft_controller (input logic 				clk, ram_clk, slow_clk, reset, start, load,
-                       input logic [8:0] 		load_address,
-                       input logic [31:0] 	data_in,
-                       output logic 			done,
-			output logic processing,
-                       output logic [31:0] 	data_out);
+module fft_controller (
+    input logic         clk, ram_clk, slow_clk, reset, start, load,
+    input logic [8:0]   load_address,
+    input logic [31:0]  data_in,
+    output logic        done,
+    output logic        processing,
+    output logic [31:0] data_out,
+    output logic [8:0]  out_addr_probe // <--- ADDED THIS LINE
+);
 
    logic			    write_0, write_1;
    logic [5:0] fft_level;
@@ -69,7 +72,7 @@ module fft_controller (input logic 				clk, ram_clk, slow_clk, reset, start, loa
 
 	assign write_0 =  (fft_level[0] & processing) | load;
    assign write_1 =  ~fft_level[0] & processing;
-
+   assign out_addr_probe = out_address; // <--- ADDED THIS LINE
 
 endmodule
 
