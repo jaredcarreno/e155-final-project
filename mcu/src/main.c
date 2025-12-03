@@ -1,4 +1,4 @@
-#define STM32L452xx 1
+
 #include "stm32l4xx.h"
 #include "main.h"
 
