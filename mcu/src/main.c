@@ -1,6 +1,6 @@
 // need some sort of voltage to frequency function and a frequency to voltage
 
-#include "arm_math.h"   // CMSIS-DSP: arm_sin_cos_f32, etc.
+#include "/Users/shreyajampana/E155/e155-final-project/mcu/lib/arm_math.h"   // CMSIS-DSP: arm_sin_cos_f32, etc.
 #include <math.h>
 #include <stdint.h>
 #include <string.h>   // for memset
