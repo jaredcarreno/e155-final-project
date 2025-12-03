@@ -3,92 +3,105 @@ module spi_fft_buffer (
     input  logic sdi, 
     input  logic reset,
     output logic sdo,
-    input  logic clk, // System clock
+    input  logic clk,
     
     // Interface to FFT Controller
-    output logic [31:0] data_to_fft,    // 32-bit output to FFT RAM
-    input  logic [31:0] data_from_fft,  // 32-bit input from FFT RAM (for reading results)
+    output logic [31:0] data_to_fft,
+    input  logic [31:0] data_from_fft,
     input  logic [8:0]  fft_read_addr,  
     input  logic [8:0]  fft_write_addr, 
     input  logic        fft_write_en,
     output logic        start_fft
 );
 
-    // 1. SPI Deserializer (16-bit for Real-only input)
+    // --- 1. WRITE LOGIC (Input from MCU -> FPGA) ---
+    // Increments every 16 bits
     logic [15:0] spi_shift_reg; 
-    logic [4:0]  bit_cnt;
-    logic [8:0]  word_cnt;
-    
-    // Write Control Signals
+    logic [4:0]  wr_bit_cnt;
+    logic [8:0]  wr_word_cnt;
     logic        buf_we;
-    logic [8:0]  ram_write_addr; // NEW: Explicit address to prevent race conditions
-    
-    // 2. Data Padding (Real -> Complex)
+    logic [8:0]  ram_write_addr_latched;
+
+    // Pad 16-bit input with zeros
     logic [31:0] ram_input_padded;
     assign ram_input_padded = {spi_shift_reg, 16'h0000}; 
 
-    // 3. Input RAM (512 x 32)
-    // Uses the STABLE address signal (ram_write_addr) instead of the moving counter
     ram input_ram (
         .clk(clk), 
         .write(buf_we),
-        .write_address(ram_write_addr), // <--- CHANGED THIS PORT
+        .write_address(ram_write_addr_latched),
         .read_address(fft_read_addr), 
         .d(ram_input_padded), 
         .q(data_to_fft)
     );
 
-    // 4. SPI Input Logic
     always_ff @(posedge sck or posedge reset) begin
         if (reset) begin
-            bit_cnt <= 0;
-            word_cnt <= 0;
+            wr_bit_cnt <= 0;
+            wr_word_cnt <= 0;
             start_fft <= 0;
             spi_shift_reg <= 0;
             buf_we <= 0;
-            ram_write_addr <= 0;
+            ram_write_addr_latched <= 0;
         end else begin
-            // Shift in MSB first
             spi_shift_reg <= {spi_shift_reg[14:0], sdi};
             
-            // Check for 16th bit (Index 15)
-            if (bit_cnt == 15) begin
+            // Trigger on 16th bit (16-bit Input Mode)
+            if (wr_bit_cnt == 15) begin
                 buf_we <= 1;
+                ram_write_addr_latched <= wr_word_cnt;
                 
-                // CRITICAL FIX: Capture current address BEFORE incrementing
-                ram_write_addr <= word_cnt; 
-                
-                // Manage Word Count
-                if (word_cnt == 511) begin
-                    start_fft <= 1; // Buffer full, trigger FFT
-                    word_cnt <= 0;  // Wrap around
+                if (wr_word_cnt == 511) begin
+                    start_fft <= 1;
+                    wr_word_cnt <= 0;
                 end else begin
-                    word_cnt <= word_cnt + 1;
+                    wr_word_cnt <= wr_word_cnt + 1;
                     start_fft <= 0;
                 end
-                
-                bit_cnt <= 0; // Reset bit counter
+                wr_bit_cnt <= 0;
             end else begin
                 buf_we <= 0;
-                bit_cnt <= bit_cnt + 1;
+                wr_bit_cnt <= wr_bit_cnt + 1;
                 start_fft <= 0;
             end
         end
     end
     
-    // 5. Output RAM (For reading results back to MCU)
+    // --- 2. READ LOGIC (Output from FPGA -> MCU) ---
+    // Increments every 32 bits (Complex Output)
     logic [31:0] out_spi_data;
-    
+    logic [4:0]  rd_bit_cnt;
+    logic [8:0]  rd_word_cnt;
+
     ram output_ram (
         .clk(clk),
         .write(fft_write_en),
         .write_address(fft_write_addr),
-        .read_address(word_cnt), // Reads follow the current word count
+        .read_address(rd_word_cnt), // Driven by separate READ counter
         .d(data_from_fft),
         .q(out_spi_data)
     );
 
-    // Output Serializer (Sends full 32-bit complex result)
-    assign sdo = out_spi_data[31 - bit_cnt]; 
+    // Read Counter Logic
+    always_ff @(posedge sck or posedge reset) begin
+        if (reset) begin
+            rd_bit_cnt <= 0;
+            rd_word_cnt <= 0;
+        end else begin
+            // Trigger on 32nd bit (32-bit Output Mode)
+            if (rd_bit_cnt == 31) begin
+                rd_bit_cnt <= 0;
+                if (rd_word_cnt == 511) 
+                    rd_word_cnt <= 0;
+                else 
+                    rd_word_cnt <= rd_word_cnt + 1;
+            end else begin
+                rd_bit_cnt <= rd_bit_cnt + 1;
+            end
+        end
+    end
+
+    // Output Serializer
+    assign sdo = out_spi_data[31 - rd_bit_cnt]; 
 
 endmodule

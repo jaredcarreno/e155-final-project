@@ -54,11 +54,18 @@ Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
 Top level modules:
 	spi_fft_buffer
 
-} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/fft.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/fft.sv}
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/full_system_tb.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/full_system_tb.sv}
 Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
--- Compiling module fft
+-- Compiling module full_system_tb
 
 Top level modules:
-	fft
+	full_system_tb
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/spi_to_fft_testbench.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/spi_to_fft_testbench.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module spi_to_fft_testbench
+
+Top level modules:
+	spi_to_fft_testbench
 
 } {} {}}
