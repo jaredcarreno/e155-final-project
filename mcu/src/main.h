@@ -9,7 +9,7 @@
 #define MAIN_H
 
 // need to include all libraries [only need to add header files] here
-#include "C:\e155-project\e155-final-project\mcu\lib\Drivers\Inc\stm32l4xx_hal.h"
+
 //#include "STM32L432KC_FLASH.h"
 //#include "STM32L432KC_GPIO.h"
 #include "C:\e155-project\e155-final-project\mcu\lib\STM32L432KC_RCC.h"
@@ -19,6 +19,7 @@
 #include "C:\e155-project\e155-final-project\mcu\lib\STM32L432KC.h"
 #include "stm32l432xx.h" 
 #include "C:\e155-project\e155-final-project\mcu\lib\STM32L432KC_DAC60501.h"
+
 
 #define LED_PIN PA6 // LED pin for blinking on Port B pin 3
 #define BUFF_LEN 32
