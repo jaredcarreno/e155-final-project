@@ -5,13 +5,13 @@ module fft_controller (
     output logic        done,
     output logic        processing,
     output logic [31:0] data_out,
-    output logic [8:0]  out_addr_probe // NEW: Expose internal address
+    output logic [8:0]  out_addr_probe
 );
 
     logic           write_0, write_1;
     logic [5:0]     fft_level; // 6 bits is enough for 9 levels
     
-    // CRITICAL FIX: All address signals must be 9 bits [8:0] for 512 points
+
     logic [8:0]     butterfly_iter, address_0_a, address_0_b, write_address_0, address_1_a, address_1_b, write_address_1, out_address;
     logic [8:0]     twiddle_address;
     
@@ -74,7 +74,7 @@ module fft_controller (
 
 endmodule
 
-// CRITICAL FIX: butterfly_iter must be [8:0] to count past 63
+//butterfly_iter must be [8:0] to count past 63
 module fft_counter (
     input logic clk, processing, reset, done,
     output logic [5:0] fft_level, 

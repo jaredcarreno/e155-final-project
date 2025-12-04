@@ -1,13 +1,10 @@
-// based on Edwards from Columbia and Harris from E85
-// 6-bit addresses for 64-point FFT
-// will introduce 1 cycle of lag
 module ram (
     input logic          clk, write,
-    input logic [8:0]    write_address, read_address, // Changed [5:0] -> [8:0]
+    input logic [8:0]    write_address, read_address,
     input logic [31:0]   d,
     output logic [31:0]  q
 );
-    logic [31:0] mem [511:0]; // Changed [63:0] -> [511:0]
+    logic [31:0] mem [511:0]; 
 
    always_ff @(posedge clk)
 		if (write) begin
@@ -19,7 +16,6 @@ module ram (
 
 endmodule
 
-// taken from sbox, synchronous - extra cycle of latency
 module twiddle_rom (input logic clk,
                     input logic [8:0] twiddle_address,
                     output logic [31:0] twiddle);

@@ -73,8 +73,7 @@ module fft (
         fft_load_addr = load_ptr;
         fft_to_spi_data = fft_data_out;
     end
-    
-    // --- ROBUST OUTPUT LOGIC (Fixing Bus Contention) ---
+  
     // Delay address and enable by 1 cycle to match RAM read latency
     // AND automatically release the bus after writing 512 words.
     logic [8:0] addr_delayed;

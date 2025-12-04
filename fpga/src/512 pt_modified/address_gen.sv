@@ -1,9 +1,9 @@
 module agu (
     input logic load, processing, done,
     input logic [5:0] fft_level,
-    input logic [8:0] butterfly_iter, load_address, out_address, // Fixed [8:0]
-    output logic [8:0] address_0_a, address_1_a, address_0_b, address_1_b, // Fixed [8:0]
-    output logic [8:0] twiddle_address // Fixed [8:0]
+    input logic [8:0] butterfly_iter, load_address, out_address,
+    output logic [8:0] address_0_a, address_1_a, address_0_b, address_1_b,
+    output logic [8:0] twiddle_address
 );
     // Load Logic
     logic [8:0] load_address_rev;
@@ -31,10 +31,10 @@ endmodule
 
 module processing_agu (
     input logic [5:0]  fft_level, 
-    input logic [8:0]  butterfly_iter,   // FIXED [8:0]
-    output logic [8:0] address_a,        // FIXED [8:0]
-    output logic [8:0] address_b,        // FIXED [8:0]
-    output logic [8:0] twiddle_address   // FIXED [8:0]
+    input logic [8:0]  butterfly_iter,   
+    output logic [8:0] address_a,
+    output logic [8:0] address_b,
+    output logic [8:0] twiddle_address  
 );
     logic [8:0] temp_a, temp_b;
     logic signed [8:0] mask, mask_shift;

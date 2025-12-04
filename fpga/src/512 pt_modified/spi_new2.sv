@@ -1,6 +1,3 @@
-// Single-Port RAM Buffer for 512-point FFT
-// Optimized for iCE40UP5K (Uses Block RAM)
-// Includes simulation fix: output_ram initialization & READ LATENCY FIX
 
 module spi_fft_buffer (
     input  logic        sck,  // From MCU
@@ -20,9 +17,7 @@ module spi_fft_buffer (
     output logic        start_fft       // Trigger signal
 );
 
-    // =============================================================
-    // 1. SPI SYNCHRONIZER & EDGE DETECTOR
-    // =============================================================
+
     logic [1:0] sck_sync;
     logic [1:0] sdi_sync;
     logic sck_rise, sck_fall;
@@ -42,9 +37,6 @@ module spi_fft_buffer (
     assign sck_fall  = (sck_sync == 2'b10);
     assign sdi_clean = sdi_sync[1]; 
 
-    // =============================================================
-    // 2. INPUT BUFFER (512 x 8-bit)
-    // =============================================================
     logic [7:0] input_ram [0:511];
     logic [8:0] spi_in_addr;
     logic [2:0] spi_in_bit_cnt;
@@ -103,11 +95,7 @@ module spi_fft_buffer (
 
     assign data_to_fft = { {8{ram_rdata_raw[7]}}, ram_rdata_raw, 16'b0 };
 
-    // =============================================================
-    // 3. OUTPUT BUFFER (512 x 32-bit)
-    // =============================================================
-    
-    // FIX: In-declaration init avoids 'x' issues
+
     logic [31:0] output_ram [0:511] = '{default:32'b0};
     
     logic [8:0]  spi_out_addr;
@@ -115,13 +103,11 @@ module spi_fft_buffer (
     logic [31:0] spi_out_shift;
     logic [31:0] ram_out_data;
     logic        load_new_word;
-    logic        fetch_wait; // <--- NEW SIGNAL FOR LATENCY
+    logic        fetch_wait;
 
-    // RAM Access Arbitration
     logic [8:0] ram_out_addr_mux;
     assign ram_out_addr_mux = fft_write_en ? fft_write_addr : spi_out_addr;
 
-    // Infer Single Port RAM
     always_ff @(posedge clk) begin
         if (fft_write_en)
             output_ram[ram_out_addr_mux] <= data_from_fft;
@@ -129,7 +115,6 @@ module spi_fft_buffer (
         ram_out_data <= output_ram[ram_out_addr_mux];
     end
 
-    // --- Bus Release Logic ---
     logic fft_write_en_d;
     logic bus_released;
     always_ff @(posedge clk) fft_write_en_d <= fft_write_en;

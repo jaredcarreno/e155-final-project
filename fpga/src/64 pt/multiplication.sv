@@ -1,4 +1,3 @@
-// perform the butterfly arithmetic for a, b, and a twiddle
 module butterfly_unit (input logic [31:0]    a, b, twiddle,
                        output logic [31:0]   a_out, b_out);
 
