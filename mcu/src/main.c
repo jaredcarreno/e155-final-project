@@ -28,12 +28,21 @@
 // ------------------------
 // Buffers
 // ------------------------
-static uint8_t    spi_rx_test[1024];
+static uint8_t    spi_rx_test[2048];
 static float32_t  X_full_test[2 * FFT_N];
 
 static float32_t  hann_win[FFT_N];
 static float32_t  ola_buffer[OUTBUF_SIZE];
 static uint32_t   ola_write_pos = 0;
+// =============================================
+// Audio buffer shared with ISR (Option B system)
+// =============================================
+#define BUFFER_SIZE 4096   // or 8192 if RAM allows
+
+static float32_t audio_buffer[BUFFER_SIZE];
+static volatile uint32_t audio_r = 0;   // ISR reads
+static volatile uint32_t audio_w = 0;   // main writes
+
 
 // =============================================================
 // Your existing phase quantization function — UNCHANGED
@@ -94,7 +103,7 @@ static void fill_fake_fft_frame(void)
 {
     memset(spi_rx_test, 0, sizeof(spi_rx_test));
 
-    int k = 10;                 // choose FFT bin (adjust for frequency)
+    int k = 10;
     int16_t real16 = 10000;
     int16_t imag16 = 0;
 
@@ -103,6 +112,7 @@ static void fill_fake_fft_frame(void)
     spi_rx_test[4*k + 2] = (imag16 >> 8) & 0xFF;
     spi_rx_test[4*k + 3] = (imag16      ) & 0xFF;
 }
+
 
 // =============================================================
 // 512-pt IFFT — UNCHANGED
@@ -128,72 +138,116 @@ void initHann(void)
 // =============================================================
 // Overlap-add reconstruction + DAC output (your original pattern)
 // =============================================================
-void process_frame_and_output(float32_t *ifft_buf)
+static inline void audio_push(float32_t s)
+{
+    audio_buffer[audio_w] = s;
+    audio_w = (audio_w + 1) % BUFFER_SIZE;
+}
+
+void process_frame_and_push(float32_t *ifft_buf)
 {
     for (int n = 0; n < FFT_N; n++)
     {
-        float32_t s = ifft_buf[2*n];         // real part
-        s *= hann_win[n];                    // apply window
+        // float32_t s = ifft_buf[2*n] * hann_win[n];   // real IFFT sample
+        float32_t s = ifft_buf[2*n] * hann_win[n] * 2000.0f;
+        printf("OLA sample: %f\n", s);
 
-        uint32_t idx = (ola_write_pos + n) % OUTBUF_SIZE;
+        uint32_t idx = (ola_write_pos + n) % BUFFER_SIZE;
+
+        // True overlap-add
         ola_buffer[idx] += s;
 
-        // Big gain (as you had) – you can tune this
-        float32_t v = ola_buffer[idx] * 200000.0f;
+        // Send overlapped sample to ISR audio buffer
+        audio_push(ola_buffer[idx]);
 
-        if (v > 5.0f) v = 5.0f;
+        // Critical: clear so OLA doesn't accumulate infinitely
+        ola_buffer[idx] = 0.0f;
+    }
+
+    ola_write_pos = (ola_write_pos + HOP) % BUFFER_SIZE;
+}
+
+
+void TIM2_IRQHandler(void)
+{
+    if (TIM2->SR & TIM_SR_UIF)
+    {
+        TIM2->SR &= ~TIM_SR_UIF;   // IMPORTANT: clear interrupt
+
+        // printf("ISR firing...\n");
+
+        float32_t s = audio_buffer[audio_r];
+        audio_r = (audio_r + 1) % BUFFER_SIZE;
+
+        float32_t v = 2.5f + 1.0f * s;
         if (v < 0.0f) v = 0.0f;
+        if (v > 5.0f) v = 5.0f;
+
+        // printf("DAC voltage set: %f\n", v);
 
         setDAC(v);
     }
-
-    ola_write_pos = (ola_write_pos + HOP) % OUTBUF_SIZE;
 }
+
+
+void initTIM2_16kHz(void)
+{
+    // Enable clock
+    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+
+    // Your known-good settings:
+    TIM2->PSC = 1;        // OK
+    TIM2->ARR = 999;      // OK
+
+    TIM2->CNT = 0;        // MUST reset the counter
+    TIM2->DIER |= TIM_DIER_UIE;
+
+    NVIC->ISER[0] |= (1 << TIM2_IRQn);
+
+    TIM2->CR1 |= TIM_CR1_CEN;
+}
+
+
 
 // =============================================================
 // main()
 // =============================================================
 int main(void)
 {
-    printf("MAIN START\n");
     configureFlash();
     configureClock();
     gpioEnable(GPIO_PORT_A);
     gpioEnable(GPIO_PORT_B);
     gpioEnable(GPIO_PORT_C);
 
-    // Use TIM15 for delay_millis as before
+    printf("System configured\n");
+
+    // Delay timer first (used by everything else)
     RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
     initTIM(TIM15);
 
-    printf("After configs\n");
+    // DAC must be configured before audio system starts
+    configureDAC();
 
+    // Init DSP buffers
     memset(ola_buffer, 0, sizeof(ola_buffer));
     initHann();
 
-    configureDAC();
+    // NOW — and ONLY NOW — start TIM2
+    initTIM2_16kHz();
+    printf("TIM2 started\n");
 
-    printf("Entering processing loop...\n");
+    __enable_irq();
+    printf("IRQs enabled\n");
 
-    while (1)
+    while(1)
     {
-        // 1) Build fake FFT frame (single bin at k=10)
         fill_fake_fft_frame();
-
-        // 2) Apply phase quantization (your working function)
         fft_postprocess_phase_quantize(spi_rx_test, X_full_test);
-
-        // 3) IFFT
         runInverseFFT512_fromSpectrum(X_full_test);
-
-        // 4) Window + overlap-add + DAC output
-        process_frame_and_output(X_full_test);
-
-        // Optional: slow things down a bit so UART prints are readable
-        // delay_millis(TIM15, 10);
+        process_frame_and_push(X_full_test);
+        printf("process\n");
     }
-
-    return 0;
 }
 
 
