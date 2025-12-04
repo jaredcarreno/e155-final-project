@@ -12,8 +12,8 @@ module spi_fft_buffer (
 );
 
     // --- 1. WRITE LOGIC (16-bit Input for Audio) ---
-    // We count to 16 bits (0..15) before writing to RAM
-    logic [15:0] spi_shift_reg; 
+    // We count to 8 bits (0..7) before writing to RAM
+    logic [7:0] spi_shift_reg; 
     logic [4:0]  wr_bit_cnt;
     logic [8:0]  wr_word_cnt;
     logic        buf_we;
@@ -44,7 +44,7 @@ module spi_fft_buffer (
             spi_shift_reg <= {spi_shift_reg[14:0], sdi};
             
             // Trigger on 16th bit (Index 15)
-            if (wr_bit_cnt == 5'd15) begin
+            if (wr_bit_cnt == 5'd7) begin
                 buf_we <= 1;
                 ram_write_addr_latched <= wr_word_cnt;
                 
