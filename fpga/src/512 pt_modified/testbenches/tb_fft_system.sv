@@ -13,7 +13,7 @@ module tb_fft_system;
     logic sdi;          // MOSI (Data into FPGA)
     logic sdo;          // MISO (Data out of FPGA)
     
-    // Debug/Status Signals (Add any others from your top module)
+    // Debug/Status Signals
     logic done;         // FFT Done signal
     
     // Clock Periods
@@ -23,27 +23,15 @@ module tb_fft_system;
     // =============================================================
     // 2. DUT Instantiation
     // =============================================================
-    // Make sure port names match your TOP LEVEL module exactly!
-
     fft dut (
         .clk(clk),
         .reset(reset),
-        .full_reset(reset), // <--- CONNECT THIS (tie it to the main reset)
+        .full_reset(reset), // Connected to main reset
         .sck(sck),
         .sdi(sdi),
         .sdo(sdo),
         .done(done)
     );
-
-    // fft dut (
-    //     .clk(clk),
-    //     .reset(reset),
-    //     .sck(sck),
-    //     .sdi(sdi),
-    //     .sdo(sdo),
-    //     .done(done) 
-    //     // Add .full_reset(full_reset) if you have it
-    // );
 
     // =============================================================
     // 3. Clock Generation
@@ -56,19 +44,22 @@ module tb_fft_system;
     // =============================================================
     initial begin
         // --- Initialize ---
-        reset = 0;
+        // Active Low Reset: Start at 0 (Reset Active)
+        reset = 0;       
         sck = 0;
         sdi = 0;
         
-        // --- Reset Pulse ---
+        // --- Hold Reset ---
         #(10 * CLK_PERIOD); 
-        reset = 1;
+        
+        // --- Release Reset ---
+        reset = 1;       
         #(10 * CLK_PERIOD);
 
         $display("Starting Simulation: Filling Buffer with 512 samples...");
 
         // --- Send 512 Bytes of Dummy Data ---
-        // Based on your RTL, the buffer takes 8-bit words (spi_in_shift is [7:0])
+        // Based on your RTL, the buffer takes 8-bit words
         for (int i = 0; i < 512; i++) begin
             // Send a sawtooth wave or simple counter value
             send_spi_byte(i[7:0]); 
@@ -77,24 +68,48 @@ module tb_fft_system;
         $display("Buffer Filled. Waiting for FFT to start processing...");
 
         // --- Wait for FFT to Complete ---
-        // The FFT takes many cycles. Wait for 'done' or a timeout.
         fork
             begin: wait_for_done
                 wait(done);
                 $display("SUCCESS: FFT Finished (done signal went high)!");
             end
             begin: timeout
-                // Wait enough time for FFT (e.g., 512 * log2(512) cycles + overhead)
-                // 100,000 clk cycles is usually plenty for a small FFT
-                repeat(100000) @(posedge clk);
+                // Timeout safety net (Increased)
+                repeat(500000) @(posedge clk);
                 $display("ERROR: Timeout waiting for FFT to finish.");
                 $stop;
             end
         join_any
         disable fork; // Kill the timeout if done triggers first
 
-        // Finish simulation
-        #(100 * CLK_PERIOD);
+        // --- Post-Processing Readout Phase ---
+        $display("Keeping simulation alive to observe data readout...");
+        
+        // 1. Wait for the FFT to write its results to RAM (Needs 512 cycles)
+        // We wait 2000 cycles just to be absolutely sure the bus is released.
+        repeat(2000) @(posedge clk); 
+
+        $display("Starting SPI Readout (Toggling SCK)...");
+
+        // 2. Toggle SCK to read out data via SDO
+        // We will read 50 full 32-bit words to verify output stream.
+        // (Increase 'k < 50' to 'k < 512' to read the full buffer)
+        for (int k = 0; k < 50; k++) begin
+            // Read one full 32-bit word
+            for (int bit_idx = 0; bit_idx < 32; bit_idx++) begin
+                sck = 0;
+                #(SCK_PERIOD/2);
+                
+                sck = 1; // Rising edge (FPGA shifts out next bit)
+                #(SCK_PERIOD/2);
+            end
+            
+            // Small gap between words to match microcontroller behavior
+            #(SCK_PERIOD);
+        end
+
+        // Finish simulation (Extended buffer time)
+        #(5000 * CLK_PERIOD);
         $stop;
     end
 
@@ -104,9 +119,7 @@ module tb_fft_system;
     task send_spi_byte(input logic [7:0] data);
         integer bit_idx;
         begin
-            // Setup data before first rising edge (Mode 0 behavior)
-            // Your RTL samples on RISING edge of SCK.
-            
+            // Setup data before first rising edge
             for (bit_idx = 7; bit_idx >= 0; bit_idx--) begin
                 sdi = data[bit_idx]; // Set Data (MSB First)
                 
@@ -117,37 +130,36 @@ module tb_fft_system;
                 sck = 0;             // SCK Falling Edge
             end
             
-            // Small gap between words (optional, but realistic)
+            // Small gap between words
             #(SCK_PERIOD); 
         end
     endtask
 
     // =============================================================
-    // 6. BACKDOOR MONITOR (Prints FFT Results directly)
+    // 6. BACKDOOR MONITOR (Prints Internal FFT Results)
     // =============================================================
+    // This block spies on the internal signals to verify calculation correctness
+    // independent of the SPI readout logic.
     initial begin
-        // 1. Wait until the FFT indicates it is done
         wait(dut.done);
         
-        // 2. Wait a tiny bit for the output logic to settle
-        // The FFT unloads 1 result per 'slow_clk' edge
+        // Wait a tiny bit for the output logic to settle
         @(posedge dut.slow_clk);
         
         $display("\n============================================================");
         $display(" PROOF OF LIFE: Internal FFT Results (Real + Imaginary) ");
         $display("============================================================");
 
-        // 3. Loop through the 512 output cycles
+        // Loop through the 512 output cycles
         for (int i = 0; i < 512; i++) begin
-            // We peek directly into the FFT unit's output wire
-            // Hierarchy: dut -> fft_unit -> data_out
             logic signed [15:0] real_part;
             logic signed [15:0] imag_part;
             
+            // Peek directly into the FFT unit's output wire
             real_part = dut.fft_unit.data_out[31:16];
             imag_part = dut.fft_unit.data_out[15:0];
 
-            // Only print non-zero values to keep the log readable (optional)
+            // Print all values (comment out 'if' to see zeros)
             if (real_part != 0 || imag_part != 0) begin
                 $display("Bin %03d:  %6d  + j %6d", i, real_part, imag_part);
             end
