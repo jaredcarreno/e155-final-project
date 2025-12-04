@@ -75,7 +75,7 @@ void setDAC(float voltage)
     if (code_f < 0.0f) code_f = 0.0f;
     if (code_f > (float)4095) code_f = (float)4095;
     uint16_t dacCode = (uint16_t)(code_f + 0.5f); // round to nearest
-    printf("DAC code = %u (0x%03X)\n", dacCode, dacCode);
+    //printf("DAC code = %u (0x%03X)\n", dacCode, dacCode);
 
 
     // Left-align 12-bit code into 16-bit data field: DATA[15:0] = DATA[11:0] << 4
