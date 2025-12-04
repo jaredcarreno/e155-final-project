@@ -85,7 +85,7 @@ void generate_sine_table(void)
 // ============================================================
 void initTIM2_16kHz(void)
 {
-    TIM2->PSC = 4;       // 80MHz / (4+1) = 16 MHz
+    TIM2->PSC = 1;       // 80MHz / (4+1) = 16 MHz
     TIM2->ARR = 999;     // 16MHz / (999+1) = 16000 Hz
     TIM2->CNT = 0;
 
@@ -101,34 +101,22 @@ void initTIM2_16kHz(void)
 // ============================================================
 // TIMER 2 INTERRUPT — 16 kHz audio sample generator
 // ============================================================
+static float phase = 0.0f;
+static float phase_step = (500.0f / SAMPLE_RATE) * TABLE_SIZE;
+
 void TIM2_IRQHandler(void)
 {
     if (TIM2->SR & TIM_SR_UIF)
     {
-        TIM2->SR &= ~TIM_SR_UIF;   // Clear flag
+        TIM2->SR &= ~TIM_SR_UIF;
 
-        tim2_count++;
+        int idx = (int)phase & (TABLE_SIZE - 1);
+        float s = sine_table[idx];
 
-        // -------------------------------
-        // Get sample from sine table
-        // -------------------------------
-        float s = sine_table[table_idx];
+        phase += phase_step;
+        if (phase >= TABLE_SIZE)
+            phase -= TABLE_SIZE;
 
-        table_idx++;
-        if (table_idx >= TABLE_SIZE)
-            table_idx = 0;
-
-        // -------------------------------
-        // Convert (-1..+1) to DAC voltage
-        // -------------------------------
-        float v = V_MID + V_AMP * s;
-
-        if (v < V_MIN) v = V_MIN;
-        if (v > V_MAX) v = V_MAX;
-
-        // -------------------------------
-        // Output to DAC
-        // -------------------------------
-        setDAC(v);
+        setDAC(2.5f + 1.0f * s);
     }
 }
