@@ -84,7 +84,7 @@ void spiWrite24(uint8_t address, uint16_t data)
     uint32_t frame = ((uint32_t)address << 16) | data;
 
     // Print 24-bit frame as hex (always 6 hex digits)
-    printf("SPI 24-bit frame: 0x%06lX\n", frame);
+    // printf("SPI 24-bit frame: 0x%06lX\n", frame);
 
     // Pull CS low to start frame
     digitalWrite(SPI_CS, 0);

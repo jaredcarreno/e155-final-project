@@ -83,4 +83,5 @@ void setDAC(float voltage)
 
     // Send to DAC (24-bit frame: addr, MSB, LSB)
     spiWrite24(DAC_REG, dataField);
+    // delay_millis(TIM15, 1);
 }
