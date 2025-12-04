@@ -192,7 +192,7 @@ int main(void)
 
     printf("After configs\n");
 
-    configureDAC();
+    // configureDAC();
 
     memset(ola_buffer, 0, sizeof(ola_buffer));
     initHann();
@@ -201,10 +201,16 @@ int main(void)
 
     printf("After memset\n");
 
-    initSPI(6, 0, 0);
+    // initSPI(6, 0, 0);
     configureDAC();
     printf("Waiting\n");
-    delay_millis(TIM15, 1000);
+    delay_millis(TIM15,1000000);
+    setDAC(4.7f);
+    delay_millis(TIM15,100000000);
+    setDAC(1.0f);
+    // setDAC(1.7f);
+    delay_millis(TIM15,10000000);
+
 
 
     while (1)
