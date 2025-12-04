@@ -1,11 +1,4 @@
-{C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/spi_new.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/spi_new.sv}
-Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
--- Compiling module spi_fft_buffer
-
-Top level modules:
-	spi_fft_buffer
-
-} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv}
+{C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv}
 Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
 -- Compiling module butterfly_unit
 -- Compiling module complex_multiplier
@@ -13,6 +6,15 @@ Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
 
 Top level modules:
 	butterfly_unit
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/address_gen.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/address_gen.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module agu
+-- Compiling module processing_agu
+-- Compiling module reverse_bits
+
+Top level modules:
+	agu
 
 } {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/fft_controller.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/fft_controller.sv}
 Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
@@ -31,21 +33,12 @@ Top level modules:
 	ram
 	twiddle_rom
 
-} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/testbenches/full_system_tb.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/testbenches/full_system_tb.sv}
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/testbenches/tb_fft_system.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/testbenches/tb_fft_system.sv}
 Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
--- Compiling module full_system_tb
+-- Compiling module tb_fft_system
 
 Top level modules:
-	full_system_tb
-
-} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/address_gen.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/address_gen.sv}
-Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
--- Compiling module agu
--- Compiling module processing_agu
--- Compiling module reverse_bits
-
-Top level modules:
-	agu
+	tb_fft_system
 
 } {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/fft.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/fft.sv}
 Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024

@@ -3,20 +3,17 @@ module fft (
     input  logic sdi, 
     input  logic reset, 
     input  logic full_reset,
-    input  logic clk,     // <-- ADD FOR TESTBENCHING
+    input  logic clk,     // 12MHz System Clock
     output logic sdo, 
     output logic done
 );
-
     logic [1:0] clk_counter = 0;
     logic ram_clk, slow_clk;
-    // logic clk;
 
-    // HSOSC #(.CLKHF_DIV ("0b10")) hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk)); // 12 MHz
-
+    // Clock Dividers
     always_ff @(posedge clk) clk_counter <= clk_counter + 1'b1;
-    assign ram_clk = clk_counter[0];
-    assign slow_clk = clk_counter[1];
+    assign ram_clk = clk_counter[0];   // 6 MHz
+    assign slow_clk = clk_counter[1];  // 3 MHz
 
     // Signals
     logic [31:0] spi_to_fft_data, fft_to_spi_data;
@@ -25,7 +22,7 @@ module fft (
     logic        fft_load, fft_start, fft_processing, fft_done;
     logic [8:0]  fft_load_addr;
     logic [31:0] fft_data_out;
-    logic [8:0]  fft_out_addr_probe; // NEW: Robust Address Signal
+    logic [8:0]  fft_out_addr_probe; 
 
     typedef enum logic [1:0] {IDLE, LOAD, PROCESS, DONE} state_t;
     state_t state;
@@ -39,7 +36,7 @@ module fft (
         .fft_write_en(spi_write_en), .start_fft(spi_buffer_full)
     );
 
-    // FFT Controller (Connected to Probe)
+    // FFT Controller
     fft_controller fft_unit (
         .clk(clk), .ram_clk(ram_clk), .slow_clk(slow_clk), .reset(reset),
         .start(fft_start), .load(fft_load), .load_address(fft_load_addr),
@@ -77,18 +74,28 @@ module fft (
         fft_to_spi_data = fft_data_out;
     end
     
-    // --- ROBUST OUTPUT LOGIC ---
+    // --- ROBUST OUTPUT LOGIC (Fixing Bus Contention) ---
     // Delay address and enable by 1 cycle to match RAM read latency
+    // AND automatically release the bus after writing 512 words.
     logic [8:0] addr_delayed;
     logic       en_delayed;
+    logic [9:0] output_write_count; // Counter to stop writing
 
     always_ff @(posedge slow_clk) begin
         if (~reset) begin
             addr_delayed <= 0;
             en_delayed <= 0;
+            output_write_count <= 0;
         end else begin
             addr_delayed <= fft_out_addr_probe;
-            en_delayed <= fft_done;
+            
+            // LOGIC CHANGE: Only write if we haven't finished the full readout
+            if (fft_done && output_write_count < 512) begin
+                en_delayed <= 1;
+                output_write_count <= output_write_count + 1;
+            end else begin
+                en_delayed <= 0; // RELEASE THE BUS so SPI can read!
+            end
         end
     end
 

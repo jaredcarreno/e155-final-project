@@ -1,2 +1,0 @@
-Bin | Expected (Py) | FFT Core (Raw) | SPI Rx (Final) | Status
-----|---------------|----------------|----------------|-------
