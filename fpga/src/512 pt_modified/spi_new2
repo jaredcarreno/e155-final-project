@@ -1,0 +1,161 @@
+// Single-Port RAM Buffer for 512-point FFT
+// - Synchronizes SPI signals to the FPGA system clock (clk)
+// - Uses inferred Single-Port RAM (efficient for iCE40UP5K)
+// - Handles 512 x 8-bit input -> 512 x 32-bit output
+
+module spi_fft_buffer (
+    input  logic        sck,  // From MCU
+    input  logic        sdi,  // From MCU
+    input  logic        reset,
+    output logic        sdo,  // To MCU
+    
+    // System Clock (Must be > 4x faster than SCK)
+    input  logic        clk, 
+
+    // Interface to FFT Controller
+    output logic [31:0] data_to_fft,    // 32-bit complex out to FFT
+    input  logic [31:0] data_from_fft,  // 32-bit complex in from FFT
+    input  logic [8:0]  fft_read_addr,  // Address FFT wants to read
+    input  logic [8:0]  fft_write_addr, // Address FFT wants to write
+    input  logic        fft_write_en,   // FFT Write enable
+    output logic        start_fft       // Trigger signal
+);
+
+    // =============================================================
+    // 1. SPI SYNCHRONIZER & EDGE DETECTOR
+    // =============================================================
+    logic [1:0] sck_sync; // Shift reg for SCK
+    logic [1:0] sdi_sync; // Shift reg for SDI
+    logic sck_rise, sck_fall;
+    logic sdi_clean;
+
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            sck_sync <= 2'b00;
+            sdi_sync <= 2'b00;
+        end else begin
+            sck_sync <= {sck_sync[0], sck};
+            sdi_sync <= {sdi_sync[0], sdi};
+        end
+    end
+
+    // Detect edges on the synchronized signal
+    assign sck_rise  = (sck_sync == 2'b01); 
+    assign sck_fall  = (sck_sync == 2'b10);
+    assign sdi_clean = sdi_sync[1]; // Stable SDI data
+
+    // =============================================================
+    // 2. INPUT BUFFER (512 x 8-bit)
+    // =============================================================
+    logic [7:0] input_ram [0:511];
+    
+    // SPI Logic State
+    logic [8:0] spi_in_addr;
+    logic [2:0] spi_in_bit_cnt;
+    logic [7:0] spi_in_shift;
+    logic       spi_in_we;
+    
+    // SPI Input State Machine (Runs on clk, triggered by sck_rise)
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            spi_in_addr <= 0;
+            spi_in_bit_cnt <= 0;
+            spi_in_we <= 0;
+            start_fft <= 0;
+        end else if (sck_rise) begin
+            // Shift in MSB first
+            spi_in_shift <= {spi_in_shift[6:0], sdi_clean};
+            spi_in_bit_cnt <= spi_in_bit_cnt + 1;
+
+            if (spi_in_bit_cnt == 3'b111) begin
+                spi_in_we <= 1; // Trigger write
+            end
+        end else begin
+            spi_in_we <= 0; // Clear write flag after 1 cycle
+            start_fft <= 0; // Default low
+
+            // Handle Address Increment AFTER write is triggered
+            if (spi_in_we) begin 
+                if (spi_in_addr == 511) begin
+                    spi_in_addr <= 0;
+                    start_fft <= 1; // Pulse start when buffer full
+                end else begin
+                    spi_in_addr <= spi_in_addr + 1;
+                end
+            end
+        end
+    end
+
+    // RAM Access Arbitration (MUX)
+    // If FFT is running (implied by not loading), FFT gets read access.
+    // We assume SPI loading and FFT processing never happen simultaneously.
+    logic [8:0] ram_in_addr_mux;
+    assign ram_in_addr_mux = start_fft ? 9'b0 : (spi_in_we ? spi_in_addr : fft_read_addr);
+    
+    // Infer Single Port RAM
+    logic [7:0] ram_rdata_raw;
+    always_ff @(posedge clk) begin
+        if (spi_in_we)
+            input_ram[ram_in_addr_mux] <= {spi_in_shift[6:0], sdi_clean}; // Capture last bit
+        
+        ram_rdata_raw <= input_ram[ram_in_addr_mux];
+    end
+
+    // Sign Extend 8-bit to 32-bit Complex
+    assign data_to_fft = { {8{ram_rdata_raw[7]}}, ram_rdata_raw, 16'b0 };
+
+
+    // =============================================================
+    // 3. OUTPUT BUFFER (512 x 32-bit)
+    // =============================================================
+    logic [31:0] output_ram [0:511];
+
+    logic [8:0]  spi_out_addr;
+    logic [4:0]  spi_out_bit_cnt;
+    logic [31:0] spi_out_shift;
+    logic [31:0] ram_out_data;
+    logic        load_new_word;
+
+    // RAM Access Arbitration
+    // FFT has priority for WRITE. SPI has priority for READ.
+    logic [8:0] ram_out_addr_mux;
+    assign ram_out_addr_mux = fft_write_en ? fft_write_addr : spi_out_addr;
+
+    // Infer Single Port RAM
+    always_ff @(posedge clk) begin
+        if (fft_write_en)
+            output_ram[ram_out_addr_mux] <= data_from_fft;
+        
+        ram_out_data <= output_ram[ram_out_addr_mux];
+    end
+
+    // SPI Output Logic (Runs on clk, triggered by sck_fall)
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            spi_out_addr <= 0;
+            spi_out_bit_cnt <= 0;
+            load_new_word <= 1;
+        end else begin 
+            // Latch data from RAM one cycle after address change
+            if (load_new_word) begin
+                spi_out_shift <= ram_out_data;
+                load_new_word <= 0;
+            end 
+            // On Falling Edge, change data
+            else if (sck_fall) begin
+                if (spi_out_bit_cnt == 31) begin
+                    spi_out_addr <= spi_out_addr + 1;
+                    spi_out_bit_cnt <= 0;
+                    load_new_word <= 1; // Fetch next word
+                end else begin
+                    spi_out_shift <= {spi_out_shift[30:0], 1'b0};
+                    spi_out_bit_cnt <= spi_out_bit_cnt + 1;
+                end
+            end
+        end
+    end
+
+    // Assign MISO
+    assign sdo = spi_out_shift[31];
+
+endmodule
