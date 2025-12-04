@@ -1,4 +1,11 @@
-{C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv}
+{C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/spi_new.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/spi_new.sv}
+Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
+-- Compiling module spi_fft_buffer
+
+Top level modules:
+	spi_fft_buffer
+
+} {} {}} {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv} {1 {vlog -work work -vopt -sv -stats=none {C:/Users/Minec/Desktop/HMC/E155/e155-final-project/fpga/src/512 pt_modified/multiplication.sv}
 Questa Lattice OEM Edition-64 vlog 2024.2 Compiler 2024.05 May 20 2024
 -- Compiling module butterfly_unit
 -- Compiling module complex_multiplier
