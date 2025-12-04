@@ -95,11 +95,17 @@ static void fill_fake_fft_frame(void)
 {
     memset(spi_rx_test, 0, sizeof(spi_rx_test));
 
-    int16_t dc = 20000;
+    int16_t real16 = 30000;    // VERY LARGE NON-ZERO VALUE
 
-    spi_rx_test[0] = (dc >> 8) & 0xFF;
-    spi_rx_test[1] = (dc      ) & 0xFF;
+    // DC bin = bin 0 → first 2 bytes are real value, next 2 bytes imaginary
+    spi_rx_test[0] = (real16 >> 8) & 0xFF;
+    spi_rx_test[1] = (real16      ) & 0xFF;
+
+    // imaginary = 0
+    spi_rx_test[2] = 0;
+    spi_rx_test[3] = 0;
 }
+
 
 //static void fill_fake_fft_frame(void)
 //{
@@ -156,11 +162,12 @@ void process_frame_and_output(float32_t *ifft_buf)
 
         // Output to your external DAC (setDAC expects a voltage)
         // CONVERT float → voltage (scaled 0..1.0)
-        float32_t v = ola_buffer[idx];
-
-        // printf("Before DAC\n");
-        setDAC(v);   // your function
-        // printf("Aftter DAC\n");
+        // float32_t v = ola_buffer[idx];
+        float32_t v = ola_buffer[idx] * 200000.0f;   // big boost
+        if (v > 5.0f) v = 5.0f;
+        if (v < 0.0f) v = 0.0f;
+        printf("v[%d] = %f\n", n, v);   // DEBUG PRINT
+        setDAC(v);
     }
 
     // move write pointer
@@ -185,6 +192,7 @@ int main(void)
 
     printf("After configs\n");
 
+    configureDAC();
 
     memset(ola_buffer, 0, sizeof(ola_buffer));
     initHann();
@@ -194,6 +202,9 @@ int main(void)
     printf("After memset\n");
 
     initSPI(6, 0, 0);
+    configureDAC();
+    printf("Waiting\n");
+    delay_millis(TIM15, 1000);
 
 
     while (1)
