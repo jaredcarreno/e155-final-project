@@ -1,4 +1,7 @@
 // Main source file for Autotune project
+// Emma Angel, Jared Carreno, Shreya Jampana
+// eangel@hmc.edu, jcarreno@hmc.edu, sjampana@hmc.edu
+// 12/5/2025
 #include "stm32l4xx.h"
 #include "arm_math.h"
 #include "arm_const_structs.h"
