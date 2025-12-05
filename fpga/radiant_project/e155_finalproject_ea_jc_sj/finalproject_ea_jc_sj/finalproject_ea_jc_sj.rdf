@@ -3,25 +3,22 @@
     <Options/>
     <Implementation title="impl_1" dir="impl_1" description="impl_1" synthesis="lse" default_strategy="Strategy1">
         <Options def_top="fft" top="fft"/>
-        <Source name="../../../src/512 pt again/fft_controller.sv" type="Verilog" type_short="Verilog">
+        <Source name="../../../src/512 pt_modified/address_gen.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../../../src/512 pt again/fft_testbench.sv" type="Verilog" type_short="Verilog" excluded="TRUE">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../../../src/512 pt again/memory_units.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../../../src/512 pt again/multiplication.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../../../src/512 pt again/spi.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../../../src/512 pt again/fft.sv" type="Verilog" type_short="Verilog">
+        <Source name="../../../src/512 pt_modified/fft.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog" top_module="fft"/>
         </Source>
-        <Source name="../../../src/512 pt again/address_gen.sv" type="Verilog" type_short="Verilog">
+        <Source name="../../../src/512 pt_modified/fft_controller.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../../../src/512 pt_modified/memory_units.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../../../src/512 pt_modified/multiplication.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../../../src/512 pt_modified/spi_new2.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
     </Implementation>
