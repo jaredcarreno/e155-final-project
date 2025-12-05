@@ -1,3 +1,6 @@
+// Authors: Jared Carreno, Shreya Jampana, Emma Angel
+// Purpose: Handles SPI communication with the MCU. Buffers and formats incoming 
+// data (8-bit to 32-bit complex) and serializes FFT results back to the MCU.
 
 module spi_fft_buffer (
     input  logic        sck,  // From MCU

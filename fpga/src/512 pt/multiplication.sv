@@ -1,4 +1,7 @@
-// perform the butterfly arithmetic for a, b, and a twiddle
+// Authors: Jared Carreno, Shreya Jampana, Emma Angel
+// Purpose: Implements the arithmetic core, including the butterfly unit (add/sub), 
+// complex multiplier, and fixed-point rounding logic.
+
 module butterfly_unit (input logic [31:0]    a, b, twiddle,
                        output logic [31:0]   a_out, b_out);
 

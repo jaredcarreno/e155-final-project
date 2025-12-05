@@ -1,3 +1,7 @@
+// Authors: Jared Carreno, Shreya Jampana, Emma Angel
+// Purpose: Calculates memory addresses for the FFT. Handles bit-reversal during 
+// loading and generates dynamic read/write and twiddle factor indices for butterfly stages.
+
 module agu (
     input logic load, processing, done,
     input logic [5:0] fft_level,

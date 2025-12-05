@@ -1,3 +1,7 @@
+// Authors: Jared Carreno, Shreya Jampana, Emma Angel
+// Purpose: Coordinates the 512-point FFT calculation. Manages memory 
+// banks, stage counters, and instantiates the AGU and datapath components.
+
 module fft_controller (
     input logic         clk, ram_clk, slow_clk, reset, start, load,
     input logic [8:0]   load_address,
@@ -74,7 +78,7 @@ module fft_controller (
 
 endmodule
 
-//butterfly_iter must be [8:0] to count past 63
+//butterfly_iter must be [8:0]
 module fft_counter (
     input logic clk, processing, reset, done,
     output logic [5:0] fft_level, 

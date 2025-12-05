@@ -1,3 +1,7 @@
+// Authors: Jared Carreno, Shreya Jampana, Emma Angel
+// Purpose: Defines a synchronous RAM for data storage 
+// and a ROM for storing pre-computed twiddle factors.
+
 module ram (
     input logic          clk, write,
     input logic [8:0]    write_address, read_address,

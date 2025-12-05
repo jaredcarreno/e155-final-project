@@ -1,3 +1,7 @@
+// Authors: Jared Carreno, Shreya Jampana, Emma Angel
+// Purpose: Top-level module connecting the SPI interface and FFT core. Manages 
+// clock generation, the primary system FSM (IDLE/LOAD/PROCESS/DONE), and data flow.
+
 module fft (
     input  logic sck, 
     input  logic sdi, 
