@@ -1,4 +1,4 @@
-// Testbench taken from https://github.com/AlecVercruysse/fft_tutorial and modified for a 64-point fft
+
 module fft_testbench();
    
    logic clk, ram_clk, slow_clk;

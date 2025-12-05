@@ -2,7 +2,7 @@
 // Date: 11/18/25
 // Purpose: Testbench for shreya's out flop
 
-// Clean, minimal, race-free testbench for fft_out_flop_8192
+// Clean, minimal, race-free testbench for fft_out_flop_4096
 
 `timescale 1ns/1ps
 // for shreyas new code
@@ -14,18 +14,18 @@ module fft_out_flop_4096_tb;
     logic fft_start;
     logic fft_done;
 
-    logic [4095:0] fft_out4095;
+    logic [4095:0] fft_out4096;
     logic buf_ready;
     logic buf_empty;
 
     // DUT
-    fft_out_flop_ dut4096 (
+    fft_out_flop_4096 dut (
         .clk(clk),
         .reset(reset),
         .fft_out32(fft_out32),
         .fft_start(fft_start),
         .fft_done(fft_done),
-        .fft_out8192(fft_out4095),
+        .fft_out4096(fft_out4096),
         .buf_ready(buf_ready),
         .buf_empty(buf_empty)
     );
@@ -72,11 +72,12 @@ module fft_out_flop_4096_tb;
         // Build expected array
         for (i = 0; i < 256; i++) begin
             real8 = i[7:0];
-            imag8 = (127 - i) & 8'hFF;
+            imag8 = (127 - i[7:0]);
             expected_words[i] = {real8, imag8};
         end
 
         // Start frame
+        @(posedge clk);
         fft_start = 1;
         @(negedge clk);
         @(posedge clk);
@@ -89,15 +90,14 @@ module fft_out_flop_4096_tb;
         // Send samples
         for (i = 0; i < 256; i++) begin
             real8 = i[7:0];
-            imag8 = (127 - i) & 8'hFF;
+            imag8 = (127 - i[7:0]);
 
             fft_out32 = {real8, 8'h00, imag8, 8'h00};
 
             fft_done = 1;
             @(negedge clk);
-            fft_done = 0;
-
             @(posedge clk);
+            fft_done = 0;
         end
 
         @(posedge clk);
@@ -112,8 +112,7 @@ module fft_out_flop_4096_tb;
 
         // Verify
         for (i = 0; i < 256; i++) begin
-            extracted = fft_out4095[(16*i) +: 16]; // LSB-first
-            // extracted = fft_out8192[(8191 - 16*i) -: 16]; // MSB-first extraction
+            extracted = fft_out4096[4095 - (16*i) -: 16]; // MSB-first
 
             if (extracted !== expected_words[i]) begin
                 $display("[TB][ERROR] mismatch @ index %0d", i);

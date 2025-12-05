@@ -1,6 +1,3 @@
-// based on Edwards from Columbia and Harris from E85
-// 6-bit addresses for 64-point FFT
-// will introduce 1 cycle of lag
 module ram (input logic          clk, write,
             input logic [5:0]    write_address, read_address,
             input logic [31:0]   d,
